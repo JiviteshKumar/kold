@@ -434,11 +434,11 @@ def apply_label(session: Session, user: User, camp: Campaign, msg: InboxMessage)
     camp.next_due = None
     if label in ("negative", "annoyed"):
         camp.status, camp.stop_reason = "paused", f"Awaiting your decision ({label})"
-        notify.record(session, user.id, "reply", f"{who} {LABEL_TEXT.get(label, "replied")}. Outreach is paused. Stop for good?",
+        notify.record(session, user.id, "reply", f"{who} {LABEL_TEXT.get(label, 'replied')}. Outreach is paused. Stop for good?",
                       push=True, url=f"/inbox?c={camp.id}", message_id=msg.id)
     else:
         camp.status = "replied"
-        notify.record(session, user.id, "reply", f"{who} {LABEL_TEXT.get(label, "replied")}. Follow-ups stopped; your move.",
+        notify.record(session, user.id, "reply", f"{who} {LABEL_TEXT.get(label, 'replied')}. Follow-ups stopped; your move.",
                       push=True, url=f"/inbox?c={camp.id}", message_id=msg.id)
     uj.status, uj.updated_at = "replied", utcnow()
     session.add(uj)

@@ -8,7 +8,7 @@ from sqlmodel import select
 
 from .config import settings
 from .db import init_db, session_scope
-from .models import User
+from .models import CrawlRun, User
 from .routes import jobs, mail, me, sandbox, tracker
 from .services import outreach
 
@@ -46,6 +46,10 @@ def _send_scheduled():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    with session_scope() as s:
+        if not s.exec(select(CrawlRun)).first():
+            log.info("No job listings yet: starting the first scan of all sources")
+            jobs.start_refresh()
     sched = BackgroundScheduler(timezone="UTC")
     sched.add_job(_crawl_all, "interval", hours=settings.crawl_interval_hours, id="crawl")
     sched.add_job(lambda: _for_each_user(outreach.check_replies, User.gmail_email != ""), "interval",

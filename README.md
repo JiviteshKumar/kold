@@ -63,6 +63,29 @@ The first scan takes about a minute (60+ sources). Tests: `cd api && .venv/Scrip
 
 In **testing** mode Google allows up to 100 users with no review, but sign-ins expire every 7 days. `gmail.readonly` is a *restricted* scope, so a public launch needs Google verification plus an annual CASA security assessment. Budget for this before opening Kold to everyone.
 
+## Put Kold online for free (runs by itself, no PC needed)
+
+Kold runs 24/7 on Oracle Cloud's **Always Free** server, with no monthly cost. It starts on boot, restarts on crashes, serves `https`, refreshes job listings and backs up nightly.
+
+> The free allowance is 2–4 ARM cores and 12–24 GB RAM (Oracle reportedly reduced it in 2026). Kold's AI runs on the processor there, so drafting an email takes about 1–2 minutes instead of seconds. Oracle asks for a card to verify you; Always Free resources are not charged.
+
+1. **Server:** sign up at [cloud.oracle.com](https://cloud.oracle.com) (pick a home region near you, e.g. Mumbai or Hyderabad). Then **Compute → Instances → Create instance**:
+   - Image: **Ubuntu 24.04** (Canonical). Shape: **Ampere VM.Standard.A1.Flex** with the most OCPUs/memory the "Always Free" label allows.
+   - Under *Add SSH keys*, choose **Generate a key pair** and **download the private key** (you need it to log in).
+   - If you see "Out of capacity", try another availability domain or try again later.
+2. **Open the web ports:** on the instance page → its **Subnet → Security list → Add ingress rules**: source `0.0.0.0/0`, TCP, destination port `80`, and again for `443`.
+3. **Free web address:** at [duckdns.org](https://www.duckdns.org), sign in, create a subdomain (e.g. `kold-yourname`) and set its IP to your instance's **public IP**.
+4. **Install:** connect to the server (Oracle's *Cloud Shell*, or `ssh -i <private-key> ubuntu@<public-ip>`) and run:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/JiviteshKumar/kold/main/deploy/setup.sh | sudo bash -s -- kold-yourname.duckdns.org
+   ```
+
+   Takes ~15 minutes (it downloads the AI model). Then open `https://kold-yourname.duckdns.org`.
+5. **Gmail:** create the Google OAuth client (below) with redirect URI `https://kold-yourname.duckdns.org/api/gmail/callback`, paste the ID and secret into `/opt/kold/api/.env` on the server, and run `sudo systemctl restart kold-api`.
+
+Update to the latest code anytime by running the same `setup.sh` command again.
+
 ## Put it on your phone (no Play Store / App Store)
 
 Kold is a PWA. It needs HTTPS to install.
@@ -71,7 +94,7 @@ Kold is a PWA. It needs HTTPS to install.
   - **Android (Chrome):** menu → *Install app*.
   - **iPhone (Safari):** Share → *Add to Home Screen*. Notifications work on iOS 16.4+ once it's on the Home Screen.
   - Add the tunnel URL's callback to your Google OAuth redirect URIs.
-- **For real users:** deploy `web/` to any Node host (or Vercel), and `api/` + Ollama to a server with a GPU (a 4B model runs well on 6–8 GB VRAM). Switch `KOLD_DATABASE_URL` to Postgres.
+- **For real users:** follow *Put Kold online for free* above, then open your `https://…duckdns.org` address on the phone and install it. As usage grows, move to a server with a GPU for faster drafting, and switch `KOLD_DATABASE_URL` to Postgres.
 
 Push notifications: generate keys with `python -m scripts.gen_vapid`, then add them to `.env`.
 

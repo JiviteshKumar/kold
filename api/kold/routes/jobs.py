@@ -43,9 +43,11 @@ def _refresh_worker() -> None:
             _state["users"] = set()
 
 
-def start_refresh(user_id: int) -> bool:
+def start_refresh(user_id: int | None = None) -> bool:
+    """Scan sources in the background, then rebuild the decks of the listed users (none = scan only)."""
     with _lock:
-        _state["users"].add(user_id)
+        if user_id is not None:
+            _state["users"].add(user_id)
         if _state["running"]:
             return False
         _state["running"], _state["started_at"] = True, utcnow()
