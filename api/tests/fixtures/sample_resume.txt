@@ -1,0 +1,23 @@
+Aarav Sharma
+aarav.sharma.test@example.com | +91 98765 43210 | Pune, India
+linkedin.com/in/aarav-sharma-test | github.com/aarav-test
+
+EDUCATION
+B.Tech in Computer Science, Vishwakarma Institute of Technology, Pune
+2022 - 2026 (expected) | CGPA 8.4
+
+SKILLS
+Python, SQL, Pandas, NumPy, scikit-learn, Power BI, Excel, Git, FastAPI, React
+
+EXPERIENCE
+Data Analyst Intern, Finlytics Pvt Ltd, Pune (May 2025 - Jul 2025)
+• Built a Power BI dashboard tracking 40+ KPIs used by the sales team every week
+• Automated a weekly Excel report with Python and Pandas, saving 6 hours per week
+• Wrote SQL queries over a 2M-row transactions table to find churn drivers
+
+PROJECTS
+Loan Default Predictor: Trained a scikit-learn gradient boosting model on 30k loan records (AUC 0.86); served it with FastAPI.
+Campus Events App: React + FastAPI app used by 500+ students to discover college events.
+
+ACHIEVEMENTS
+• Finalist, Smart India Hackathon 2024

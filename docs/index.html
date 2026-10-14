@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kold: cold outreach, warm replies</title>
+<meta name="description" content="Kold finds genuine opportunities that match your resume and runs your cold-email outreach, with you approving every email.">
+<meta name="theme-color" content="#05070d">
+<meta property="og:title" content="Kold: cold outreach, warm replies">
+<meta property="og:description" content="Genuine opportunities matched to your resume. Cold emails you approve, one by one. Every reply in one place.">
+<meta property="og:image" content="assets/icon-512.png">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05070d; --surface: #0f1522; --surface-2: #151c2c;
+    --line: rgba(148,178,230,.12); --line-strong: rgba(148,178,230,.22);
+    --ink: #eef3fb; --ink-2: #b4bfd3; --ink-3: #7c879c;
+    --ice: #7dd3fc; --ice-deep: #38bdf8; --frost: #c7e9ff; --violet: #a78bfa;
+    --ember: #f59e0b; --flame: #f97316; --heat: #ef4444; --ok: #34d399;
+    --grad-cold: linear-gradient(135deg,#e0f2fe 0%,#7dd3fc 45%,#38bdf8 100%);
+    --grad-warm: linear-gradient(135deg,#fde68a 0%,#f59e0b 50%,#f97316 100%);
+    --grad-temp: linear-gradient(90deg,#38bdf8 0%,#a78bfa 45%,#f59e0b 75%,#ef4444 100%);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); color-scheme: dark; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Geist, system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; }
+  .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(60vw 50vh at 10% -10%, rgba(56,189,248,.13), transparent 60%),
+                radial-gradient(50vw 40vh at 110% 10%, rgba(167,139,250,.08), transparent 60%),
+                radial-gradient(70vw 50vh at 50% 120%, rgba(245,158,11,.07), transparent 60%); }
+  .ambient::after { content: ""; position: absolute; inset: 0; opacity: .25;
+    background-image: radial-gradient(rgba(199,233,255,.5) .6px, transparent .6px); background-size: 34px 34px;
+    mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%); }
+  .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  .cold { background: var(--grad-cold); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .warm { background: var(--grad-warm); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hair { box-shadow: inset 0 0 0 1px var(--line); }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(5,7,13,.7); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; gap: 12px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; font-size: 22px; letter-spacing: -.04em; }
+  .brand img { width: 30px; height: 30px; border-radius: 9px; }
+  nav .links { margin-left: auto; display: flex; gap: 6px; }
+  nav .links a { text-decoration: none; color: var(--ink-3); font-size: 14px; padding: 8px 12px; border-radius: 999px; }
+  nav .links a:hover { color: var(--ink); background: rgba(255,255,255,.05); }
+  @media (max-width: 640px) { nav .links a.hide-sm { display: none; } }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 500; font-size: 15px; text-decoration: none; transition: transform .15s, filter .15s; border: 0; cursor: pointer; font-family: inherit; }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--grad-cold); color: #04121f; box-shadow: 0 10px 30px -10px rgba(56,189,248,.7); }
+  .btn.warm-btn { background: var(--grad-warm); color: #1f1203; box-shadow: 0 10px 30px -10px rgba(245,158,11,.7); }
+  .btn.ghost { color: var(--ink); background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn:hover { filter: brightness(1.1); }
+
+  /* hero + intro animation */
+  .hero { padding: 72px 0 40px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-top: 44px; text-align: center; } .hero .ctas { justify-content: center; } }
+  .kicker { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--ice); font-weight: 500; }
+  h1 { font-size: clamp(40px, 7vw, 72px); line-height: 1.02; letter-spacing: -.045em; margin: 14px 0 18px; font-weight: 600; }
+  .lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--ink-2); max-width: 560px; }
+  @media (max-width: 860px) { .lead { margin: 0 auto; } }
+  .ctas { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+
+  .stage { position: relative; aspect-ratio: 1; max-width: 440px; width: 100%; margin: 0 auto; border-radius: 36px; background: radial-gradient(circle at 50% 40%, #0b1424, #03050a 70%); box-shadow: inset 0 0 0 1px var(--line), 0 40px 90px -40px rgba(56,189,248,.5); overflow: hidden; cursor: pointer; }
+  .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stage .bloom { position: absolute; inset: 15%; border-radius: 50%; background: radial-gradient(circle, rgba(56,189,248,.45), transparent 65%); opacity: 0; }
+  .stage .word { position: absolute; left: 0; right: 0; bottom: 15%; text-align: center; font-size: clamp(44px, 9vw, 64px); font-weight: 600; letter-spacing: -.06em; }
+  .stage .word span { display: inline-block; opacity: 0; transform: translateY(40px); filter: blur(10px); }
+  .stage .tag { position: absolute; left: 0; right: 0; bottom: 9%; text-align: center; font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: var(--ink-2); opacity: 0; }
+  .stage .replay { position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: var(--ink-3); }
+  .arm, .branch { fill: none; stroke: url(#ice); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .envg { opacity: 0; transform-origin: 100px 92px; }
+  .envline { fill: none; stroke: url(#ice); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .trail { fill: none; stroke: url(#trail); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .mark { opacity: 0; transform-origin: 100px 92px; }
+  .play .bloom { animation: bloom 4.2s ease forwards; }
+  .play .arm { animation: draw .8s ease-out .5s forwards, fade .3s ease 1.7s forwards; }
+  .play .branch { animation: draw .5s ease-out .85s forwards, fade .3s ease 1.7s forwards; }
+  .play .crystal { animation: spin 1.2s ease-out .5s forwards; transform-origin: 100px 92px; }
+  .play .envg { animation: show .01s linear 1.6s forwards, fly .7s cubic-bezier(.6,0,.3,1) 1.95s forwards; }
+  .play .envline { animation: draw .3s ease 1.6s forwards; }
+  .play .trail { animation: draw .7s ease-in-out 2.4s forwards, fade .4s ease 3.2s forwards; }
+  .play .mark { animation: pop .7s cubic-bezier(.2,1.4,.4,1) 2.7s forwards, rise .6s ease 3.2s forwards; }
+  .play .word span { animation: letter .6s cubic-bezier(.2,1.2,.4,1) forwards; }
+  .play .word span:nth-child(1) { animation-delay: 3.2s } .play .word span:nth-child(2) { animation-delay: 3.27s }
+  .play .word span:nth-child(3) { animation-delay: 3.34s } .play .word span:nth-child(4) { animation-delay: 3.41s }
+  .play .tag { animation: show .8s ease 3.6s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes fade { to { opacity: 0; } }
+  @keyframes show { to { opacity: 1; } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(30deg); } }
+  @keyframes fly { 0% { transform: none; } 25% { transform: translate(-6px,4px) rotate(-8deg); } 100% { transform: translate(150px,-150px) rotate(18deg) scale(.25); opacity: 0; } }
+  @keyframes bloom { 0% { opacity: 0; } 30% { opacity: .5; background: radial-gradient(circle, rgba(56,189,248,.45), transparent 65%); } 62% { opacity: .5; } 100% { opacity: .65; background: radial-gradient(circle, rgba(245,158,11,.5), rgba(249,115,22,.12) 45%, transparent 70%); } }
+  @keyframes pop { from { opacity: 0; transform: scale(.3) rotate(-20deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+  @keyframes rise { to { transform: translateY(-34px) scale(.62); } }
+  @keyframes letter { to { opacity: 1; transform: none; filter: blur(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .stage *, .stage { animation-duration: .01ms !important; animation-delay: 0s !important; }
+  }
+
+  /* temperature strip */
+  .temp { height: 6px; border-radius: 999px; background: var(--grad-temp); margin: 46px 0 10px; opacity: .8; }
+  .temp-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); flex-wrap: wrap; gap: 6px; }
+
+  section { padding: 70px 0 10px; }
+  h2 { font-size: clamp(28px, 4.2vw, 42px); letter-spacing: -.035em; line-height: 1.1; margin: 10px 0 14px; font-weight: 600; }
+  .sub { color: var(--ink-2); max-width: 640px; font-size: 17px; }
+  .grid { display: grid; gap: 14px; margin-top: 30px; }
+  .g3 { grid-template-columns: repeat(3, 1fr); } .g2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 860px) { .g3, .g2 { grid-template-columns: 1fr; } }
+  .card { background: linear-gradient(180deg, rgba(21,28,44,.75), rgba(15,21,34,.75)); border-radius: 22px; padding: 22px; box-shadow: inset 0 0 0 1px var(--line); transition: transform .2s, box-shadow .2s; }
+  .card:hover { transform: translateY(-3px); box-shadow: inset 0 0 0 1px var(--line-strong), 0 20px 50px -30px rgba(56,189,248,.5); }
+  .card h3 { margin: 12px 0 6px; font-size: 18px; letter-spacing: -.02em; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; font-size: 20px; background: rgba(125,211,252,.1); box-shadow: inset 0 0 0 1px rgba(125,211,252,.25); }
+  .ico.w { background: rgba(245,158,11,.12); box-shadow: inset 0 0 0 1px rgba(245,158,11,.3); }
+  .step { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--ice); }
+
+  /* steps timeline */
+  .flow { counter-reset: s; margin-top: 30px; display: grid; gap: 12px; }
+  .flow li { list-style: none; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; padding: 18px; border-radius: 20px; background: rgba(15,21,34,.6); box-shadow: inset 0 0 0 1px var(--line); }
+  .flow li::before { counter-increment: s; content: counter(s); width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-weight: 600; background: var(--grad-temp); color: #05070d; }
+  .flow li:nth-child(1)::before { background: #38bdf8; } .flow li:nth-child(2)::before { background: #60a5fa; }
+  .flow li:nth-child(3)::before { background: #a78bfa; } .flow li:nth-child(4)::before { background: #f59e0b; }
+  .flow li:nth-child(5)::before { background: #f97316; } .flow li:nth-child(6)::before { background: #ef4444; }
+  .flow b { display: block; font-size: 16px; margin-bottom: 2px; }
+  .flow span { color: var(--ink-2); font-size: 15px; }
+  .flow ul { margin: 0; padding: 0; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+  .pill.ok { color: var(--ok); background: rgba(52,211,153,.1); box-shadow: inset 0 0 0 1px rgba(52,211,153,.3); }
+
+  pre { background: #0a0f1a; border-radius: 16px; padding: 18px; overflow-x: auto; box-shadow: inset 0 0 0 1px var(--line); font-family: "Geist Mono", monospace; font-size: 13.5px; color: var(--frost); line-height: 1.7; }
+  pre .c { color: var(--ink-3); }
+  .note { color: var(--ink-3); font-size: 14px; }
+
+  footer { margin-top: 80px; border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--ink-3); font-size: 14px; }
+  footer .wrap { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/icon-192.png" alt="">k<span class="cold">o</span>ld</a>
+    <div class="links">
+      <a href="#how" class="hide-sm">How it works</a>
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="#run">Run it</a>
+      <a href="https://github.com/JiviteshKumar/kold">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap" id="top">
+  <div class="hero">
+    <div>
+      <div class="kicker">Job search, warmed up</div>
+      <h1>Every opportunity<br>starts <span class="cold">cold</span>.<br>Kold makes it <span class="warm">warm</span>.</h1>
+      <p class="lead">Upload your resume. Kold finds genuine openings you can actually take from India (on-site, or remote with global teams), writes thoughtful cold emails, and puts every reply in one organised place. Nothing is sent without your approval.</p>
+      <div class="ctas">
+        <a class="btn primary" href="https://github.com/JiviteshKumar/kold">View on GitHub</a>
+        <a class="btn ghost" href="#run">Run it yourself</a>
+      </div>
+    </div>
+
+    <div class="stage" id="stage" role="button" aria-label="Replay the Kold intro" tabindex="0">
+      <div class="bloom"></div>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="ice" gradientUnits="userSpaceOnUse" x1="60" y1="50" x2="140" y2="130"><stop offset="0" stop-color="#e0f2fe"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+          <linearGradient id="trail" gradientUnits="userSpaceOnUse" x1="190" y1="10" x2="60" y2="140"><stop offset="0" stop-color="#7dd3fc"/><stop offset=".5" stop-color="#a78bfa"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+          <linearGradient id="emb" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64"><stop offset="0" stop-color="#fde68a"/><stop offset=".55" stop-color="#f59e0b"/><stop offset="1" stop-color="#f97316"/></linearGradient>
+        </defs>
+        <g class="crystal">
+          <g><path class="arm" pathLength="1" d="M100 56 V128"/><path class="branch" pathLength="1" d="M100 66 l-7 -7 M100 66 l7 -7"/><path class="branch" pathLength="1" d="M100 118 l-7 7 M100 118 l7 7"/></g>
+          <g transform="rotate(60 100 92)"><path class="arm" pathLength="1" d="M100 56 V128"/><path class="branch" pathLength="1" d="M100 66 l-7 -7 M100 66 l7 -7"/><path class="branch" pathLength="1" d="M100 118 l-7 7 M100 118 l7 7"/></g>
+          <g transform="rotate(120 100 92)"><path class="arm" pathLength="1" d="M100 56 V128"/><path class="branch" pathLength="1" d="M100 66 l-7 -7 M100 66 l7 -7"/><path class="branch" pathLength="1" d="M100 118 l-7 7 M100 118 l7 7"/></g>
+        </g>
+        <g class="envg"><rect class="envline" pathLength="1" x="72" y="74" width="56" height="38" rx="6"/><path class="envline" pathLength="1" d="M72 78 L100 98 L128 78"/></g>
+        <path class="trail" pathLength="1" d="M190 10 C 150 30, 40 40, 60 110 S 140 150, 100 100"/>
+        <g class="mark">
+          <rect x="70" y="62" width="60" height="60" rx="18" fill="#0b0f19" stroke="url(#emb)" stroke-width="2"/>
+          <g transform="translate(70 62) scale(.9375)" stroke="#f59e0b" stroke-width="3.4" stroke-linecap="round" fill="none">
+            <path d="M32 12v40"/><path d="M14.7 22l34.6 20"/><path d="M49.3 22L14.7 42"/><path d="M18 32l14 8 14-8"/>
+          </g>
+        </g>
+      </svg>
+      <div class="word"><span>k</span><span class="warm">o</span><span>l</span><span>d</span></div>
+      <div class="tag">Cold outreach · Warm replies</div>
+      <div class="replay">Tap to replay ↺</div>
+    </div>
+  </div>
+
+  <div class="temp reveal"></div>
+  <div class="temp-legend reveal"><span>❄️ Match</span><span>Saved</span><span>Emailed</span><span>Replied</span><span>Interview</span><span>🔥 Offer</span></div>
+
+  <section id="how" class="reveal">
+    <div class="kicker">How it works</div>
+    <h2>From resume to reply, with you in control.</h2>
+    <p class="sub">Kold does the searching, writing and follow-up tracking every day, so you don't have to. You make every decision that matters.</p>
+    <ul class="flow">
+      <li><div><b>Upload your resume</b><span>Your profile builds itself. Every detail is checked against your resume, so nothing is invented. Edit anything.</span></div></li>
+      <li><div><b>Swipe through genuine matches</b><span>Listings come from employers' official careers boards and trusted public job boards: no scraping, scam warnings included, and each card says why it matched.</span></div></li>
+      <li><div><b>Find the right person</b><span>Kold only uses email addresses the company publishes itself, shows exactly where each one was found, and never guesses.</span></div></li>
+      <li><div><b>Approve every email</b><span>A tailored resume and a personal email are drafted into <i>Today</i>. Edit, then send now or at the recipient's morning in their time zone.</span></div></li>
+      <li><div><b>Follow up politely</b><span>At most two follow-ups, threaded under your first email and drafted for your review. Any reply stops them instantly.</span></div></li>
+      <li><div><b>Every reply, in one place</b><span>Replies are labelled: interested, a question, not now, declined, out of office, bounced. Answer yourself, or let Kold draft a reply you edit.</span></div></li>
+    </ul>
+  </section>
+
+  <section id="features" class="reveal">
+    <div class="kicker">The app</div>
+    <h2>Five screens. Zero inbox digging.</h2>
+    <div class="grid g3">
+      <div class="card"><div class="ico w">🏠</div><h3>Home</h3><p>Your first stop: replies that need you, emails to approve, deadlines this week, new matches and your pipeline at a glance.</p></div>
+      <div class="card"><div class="ico">❄️</div><h3>Discover</h3><p>A swipeable deck of verified openings with a match "temperature", the reasons behind it, the source and a trust score.</p></div>
+      <div class="card"><div class="ico">✍️</div><h3>Today</h3><p>Your daily review queue. Pre-send checks flag placeholders, spammy phrasing and any claim your resume doesn't back.</p></div>
+      <div class="card"><div class="ico w">💬</div><h3>Inbox</h3><p>One conversation per company with the full back-and-forth, including replies sent as a new email or by a colleague.</p></div>
+      <div class="card"><div class="ico">🗂️</div><h3>Tracker</h3><p>Saved → Applied → Emailing → Replied → Interview → Offer, with notes, deadlines and reminders.</p></div>
+      <div class="card"><div class="ico">🔔</div><h3>Activity log</h3><p>A timestamped record of everything Kold did for you. Nothing happens off the record.</p></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="kicker">Principles</div>
+    <h2>Genuine. Transparent. Yours.</h2>
+    <div class="grid g2">
+      <div class="card"><span class="pill ok">✓ You approve everything</span><h3>No email leaves without your tap</h3><p>Daily cap of 25 emails, two follow-ups at most, and an automatic pause if someone is unhappy or out of office.</p></div>
+      <div class="card"><span class="pill ok">✓ Private by design</span><h3>Your own AI, on your machine</h3><p>Kold runs an open-weight model locally, with no third-party AI services. It reads only your outreach conversations, never the rest of your inbox.</p></div>
+      <div class="card"><span class="pill ok">✓ No invented facts</span><h3>Grounded in your resume</h3><p>Every number and claim in a draft must come from your resume. Anything else is flagged before you send.</p></div>
+      <div class="card"><span class="pill ok">✓ Real listings only</span><h3>Official sources, live postings</h3><p>Listings the employer takes down disappear, and remote roles are shown only if they accept candidates in India.</p></div>
+    </div>
+  </section>
+
+  <section id="run" class="reveal">
+    <div class="kicker">Run it</div>
+    <h2>Install it on your computer, use it on your phone.</h2>
+    <p class="sub">Kold is a full app: a Python server, a local AI model and an installable web app (PWA) for Android and iPhone. No app store needed. This page is just the front door.</p>
+<pre><span class="c"># 1. Local AI model</span>
+ollama pull qwen3.5:4b
+
+<span class="c"># 2. Server</span>
+git clone https://github.com/JiviteshKumar/kold.git
+cd kold/api
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt     <span class="c"># macOS/Linux: .venv/bin/pip</span>
+cp .env.example .env                              <span class="c"># add KOLD_GMAIL_SANDBOX=1 to try it without real email</span>
+.venv/Scripts/python -m uvicorn kold.main:app --port 8000
+
+<span class="c"># 3. App (new terminal)</span>
+cd kold/web
+npm install
+npm run dev -- -p 3100                            <span class="c"># open http://localhost:3100</span></pre>
+    <p class="note">To send from your own Gmail, follow "Gmail setup" in the <a href="https://github.com/JiviteshKumar/kold#gmail-setup-google-oauth">README</a>. On a phone, open the app over HTTPS and choose "Add to Home Screen".</p>
+    <div class="ctas"><a class="btn warm-btn" href="https://github.com/JiviteshKumar/kold">Get the code</a></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top" style="font-size:18px"><img src="assets/icon-192.png" alt="" style="width:24px;height:24px">kold</a>
+    <span>Cold outreach, warm replies.</span>
+    <span style="margin-left:auto">Built by Jivitesh Kumar · <a href="https://github.com/JiviteshKumar/kold">GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+  // Intro: plays on load, replays on tap. A soft synthesized chime plays once the visitor interacts (browsers block autoplay audio).
+  const stage = document.getElementById('stage');
+  const replay = () => { stage.classList.remove('play'); void stage.offsetWidth; stage.classList.add('play'); };
+  let ctx;
+  function chime() {
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = ctx.currentTime, out = ctx.createGain(); out.gain.value = .5; out.connect(ctx.destination);
+      const tone = (f, s, d, g, type = 'sine') => { const o = ctx.createOscillator(), a = ctx.createGain(); o.type = type; o.frequency.value = f;
+        a.gain.setValueAtTime(.0001, t + s); a.gain.exponentialRampToValueAtTime(g, t + s + .03); a.gain.exponentialRampToValueAtTime(.0001, t + s + d);
+        o.connect(a).connect(out); o.start(t + s); o.stop(t + s + d + .05); };
+      [2093, 2637, 3136, 3951].forEach((f, i) => tone(f, .5 + i * .09, 1.2, .03));
+      [261.63, 329.63, 392, 493.88].forEach((f, i) => tone(f, 3.1 + i * .05, 1.6, .08, 'triangle'));
+      tone(130.81, 3.1, 1.8, .1);
+    } catch (e) {}
+  }
+  stage.addEventListener('click', () => { replay(); chime(); });
+  stage.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); replay(); chime(); } });
+  requestAnimationFrame(replay);
+
+  // Gentle reveal on scroll.
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

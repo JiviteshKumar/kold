@@ -1,0 +1,294 @@
+{
+  "_comment": "Employers whose official applicant-tracking job boards Kold reads directly. Every slug here was verified live. Add more with: python -m scripts.check_sources <ats> <slug>",
+  "greenhouse": [
+    {
+      "slug": "groww",
+      "name": "Groww",
+      "domain": "groww.in"
+    },
+    {
+      "slug": "inmobi",
+      "name": "InMobi",
+      "domain": "inmobi.com"
+    },
+    {
+      "slug": "druva",
+      "name": "Druva",
+      "domain": "druva.com"
+    },
+    {
+      "slug": "glance",
+      "name": "Glance",
+      "domain": "glance.com"
+    },
+    {
+      "slug": "observeai",
+      "name": "Observe.AI",
+      "domain": "observe.ai"
+    },
+    {
+      "slug": "stripe",
+      "name": "Stripe",
+      "domain": "stripe.com"
+    },
+    {
+      "slug": "figma",
+      "name": "Figma",
+      "domain": "figma.com"
+    },
+    {
+      "slug": "airbnb",
+      "name": "Airbnb",
+      "domain": "airbnb.com"
+    },
+    {
+      "slug": "discord",
+      "name": "Discord",
+      "domain": "discord.com"
+    },
+    {
+      "slug": "gitlab",
+      "name": "GitLab",
+      "domain": "gitlab.com"
+    },
+    {
+      "slug": "cloudflare",
+      "name": "Cloudflare",
+      "domain": "cloudflare.com"
+    },
+    {
+      "slug": "databricks",
+      "name": "Databricks",
+      "domain": "databricks.com"
+    },
+    {
+      "slug": "mongodb",
+      "name": "MongoDB",
+      "domain": "mongodb.com"
+    },
+    {
+      "slug": "elastic",
+      "name": "Elastic",
+      "domain": "elastic.co"
+    },
+    {
+      "slug": "twilio",
+      "name": "Twilio",
+      "domain": "twilio.com"
+    },
+    {
+      "slug": "dropbox",
+      "name": "Dropbox",
+      "domain": "dropbox.com"
+    },
+    {
+      "slug": "robinhood",
+      "name": "Robinhood",
+      "domain": "robinhood.com"
+    },
+    {
+      "slug": "reddit",
+      "name": "Reddit",
+      "domain": "redditinc.com"
+    },
+    {
+      "slug": "pinterest",
+      "name": "Pinterest",
+      "domain": "pinterest.com"
+    },
+    {
+      "slug": "gusto",
+      "name": "Gusto",
+      "domain": "gusto.com"
+    },
+    {
+      "slug": "duolingo",
+      "name": "Duolingo",
+      "domain": "duolingo.com"
+    },
+    {
+      "slug": "samsara",
+      "name": "Samsara",
+      "domain": "samsara.com"
+    },
+    {
+      "slug": "okta",
+      "name": "Okta",
+      "domain": "okta.com"
+    },
+    {
+      "slug": "datadog",
+      "name": "Datadog",
+      "domain": "datadoghq.com"
+    },
+    {
+      "slug": "asana",
+      "name": "Asana",
+      "domain": "asana.com"
+    },
+    {
+      "slug": "airtable",
+      "name": "Airtable",
+      "domain": "airtable.com"
+    },
+    {
+      "slug": "brex",
+      "name": "Brex",
+      "domain": "brex.com"
+    },
+    {
+      "slug": "instacart",
+      "name": "Instacart",
+      "domain": "instacart.com"
+    },
+    {
+      "slug": "lyft",
+      "name": "Lyft",
+      "domain": "lyft.com"
+    },
+    {
+      "slug": "udemy",
+      "name": "Udemy",
+      "domain": "udemy.com"
+    },
+    {
+      "slug": "coursera",
+      "name": "Coursera",
+      "domain": "coursera.org"
+    },
+    {
+      "slug": "rubrik",
+      "name": "Rubrik",
+      "domain": "rubrik.com"
+    }
+  ],
+  "lever": [
+    {
+      "slug": "cred",
+      "name": "CRED",
+      "domain": "cred.club"
+    },
+    {
+      "slug": "meesho",
+      "name": "Meesho",
+      "domain": "meesho.com"
+    },
+    {
+      "slug": "zeta",
+      "name": "Zeta",
+      "domain": "zeta.tech"
+    },
+    {
+      "slug": "paytm",
+      "name": "Paytm",
+      "domain": "paytm.com"
+    },
+    {
+      "slug": "mindtickle",
+      "name": "Mindtickle",
+      "domain": "mindtickle.com"
+    },
+    {
+      "slug": "fampay",
+      "name": "FamPay",
+      "domain": "famapp.in"
+    },
+    {
+      "slug": "pocketfm",
+      "name": "Pocket FM",
+      "domain": "pocketfm.com"
+    },
+    {
+      "slug": "spotify",
+      "name": "Spotify",
+      "domain": "spotify.com"
+    },
+    {
+      "slug": "palantir",
+      "name": "Palantir",
+      "domain": "palantir.com"
+    }
+  ],
+  "ashby": [
+    {
+      "slug": "sarvam",
+      "name": "Sarvam AI",
+      "domain": "sarvam.ai"
+    },
+    {
+      "slug": "atlan",
+      "name": "Atlan",
+      "domain": "atlan.com"
+    },
+    {
+      "slug": "spotdraft",
+      "name": "SpotDraft",
+      "domain": "spotdraft.com"
+    },
+    {
+      "slug": "linear",
+      "name": "Linear",
+      "domain": "linear.app"
+    },
+    {
+      "slug": "ramp",
+      "name": "Ramp",
+      "domain": "ramp.com"
+    },
+    {
+      "slug": "notion",
+      "name": "Notion",
+      "domain": "notion.so"
+    },
+    {
+      "slug": "openai",
+      "name": "OpenAI",
+      "domain": "openai.com"
+    },
+    {
+      "slug": "vercel",
+      "name": "Vercel",
+      "domain": "vercel.com"
+    },
+    {
+      "slug": "supabase",
+      "name": "Supabase",
+      "domain": "supabase.com"
+    },
+    {
+      "slug": "replit",
+      "name": "Replit",
+      "domain": "replit.com"
+    },
+    {
+      "slug": "deel",
+      "name": "Deel",
+      "domain": "deel.com"
+    },
+    {
+      "slug": "posthog",
+      "name": "PostHog",
+      "domain": "posthog.com"
+    },
+    {
+      "slug": "cohere",
+      "name": "Cohere",
+      "domain": "cohere.com"
+    },
+    {
+      "slug": "perplexity",
+      "name": "Perplexity",
+      "domain": "perplexity.ai"
+    },
+    {
+      "slug": "elevenlabs",
+      "name": "ElevenLabs",
+      "domain": "elevenlabs.io"
+    },
+    {
+      "slug": "plaid",
+      "name": "Plaid",
+      "domain": "plaid.com"
+    }
+  ]
+}

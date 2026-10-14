@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/*
+  Kold design language: temperature.
+  Everything starts cold (ice blue) and warms up as an opportunity progresses:
+  match → saved → emailed → replied → interview → offer.
+*/
+:root {
+  --bg: #05070d;
+  --bg-elev: #0b0f19;
+  --surface: #0f1522;
+  --surface-2: #151c2c;
+  --line: rgba(148, 178, 230, 0.12);
+  --line-strong: rgba(148, 178, 230, 0.22);
+  --ink: #eef3fb;
+  --ink-2: #b4bfd3;
+  --ink-3: #7c879c;
+
+  --ice: #7dd3fc;
+  --ice-deep: #38bdf8;
+  --frost: #c7e9ff;
+  --violet: #a78bfa;
+  --ember: #f59e0b;
+  --flame: #f97316;
+  --heat: #ef4444;
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+
+  --grad-cold: linear-gradient(135deg, #e0f2fe 0%, #7dd3fc 45%, #38bdf8 100%);
+  --grad-warm: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #f97316 100%);
+  --grad-temp: linear-gradient(90deg, #38bdf8 0%, #a78bfa 45%, #f59e0b 75%, #ef4444 100%);
+  --radius: 18px;
+  --shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--line);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-elev: var(--bg-elev);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ice: var(--ice);
+  --color-ice-deep: var(--ice-deep);
+  --color-frost: var(--frost);
+  --color-violet: var(--violet);
+  --color-ember: var(--ember);
+  --color-flame: var(--flame);
+  --color-heat: var(--heat);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  background: var(--bg);
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  overscroll-behavior-y: none;
+}
+
+/* Ambient frost: a quiet, slowly drifting backdrop behind every screen. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60vw 50vh at 10% -10%, rgba(56, 189, 248, 0.12), transparent 60%),
+    radial-gradient(50vw 40vh at 110% 10%, rgba(167, 139, 250, 0.08), transparent 60%),
+    radial-gradient(70vw 50vh at 50% 120%, rgba(245, 158, 11, 0.06), transparent 60%);
+}
+.ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(199, 233, 255, 0.5) 0.6px, transparent 0.6px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%);
+  opacity: 0.25;
+}
+
+.text-cold {
+  background: var(--grad-cold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.text-warm {
+  background: var(--grad-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(21, 28, 44, 0.85), rgba(15, 21, 34, 0.85));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--shadow);
+}
+
+.hairline {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ice);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

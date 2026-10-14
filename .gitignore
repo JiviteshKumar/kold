@@ -1,0 +1,27 @@
+# Python
+api/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets and user data: never commit resumes, tokens or the database
+api/.env
+api/data/
+
+# Web
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+*.tsbuildinfo
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tool settings
+.claude/
+web/AGENTS.md
+web/CLAUDE.md
