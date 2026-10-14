@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Kold: one-command install on a fresh Ubuntu server (tested target: Oracle Cloud Always Free, Ubuntu 24.04 ARM).
+# Kold: one-command install on a fresh Ubuntu server (made for Oracle Cloud Always Free, Ubuntu 24.04 ARM or x86).
 #
 #   curl -fsSL https://raw.githubusercontent.com/JiviteshKumar/kold/main/deploy/setup.sh | sudo bash -s -- your-name.duckdns.org
 #
