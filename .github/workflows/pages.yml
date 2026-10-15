@@ -51,7 +51,7 @@ jobs:
           KOLD_STATIC: "1"
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
         run: |
-          npm ci
+          npm install --no-audit --no-fund  # npm ci trips on Linux-only optional deps missing from a Windows-made lock file
           npm run build
 
       - name: Assemble site
