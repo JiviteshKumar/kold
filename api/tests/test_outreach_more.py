@@ -50,12 +50,13 @@ def test_concurrent_sends_only_one_goes_out(world):
     s, user, uj, fake = world
     camp = outreach.start(s, user, uj, "careers@acme.test", [4, 7], 2)
     oid = first_draft(s, camp).id
+    uid, user_cls = user.id, type(user)  # read here: the test's own session must not be used from other threads
     unexpected = []
 
     def go():
         with Session(engine) as s2:
             try:
-                outreach.send_now(s2, s2.get(type(user), user.id), s2.get(OutboxEmail, oid))
+                outreach.send_now(s2, s2.get(user_cls, uid), s2.get(OutboxEmail, oid))
             except outreach.OutreachError:
                 pass  # lost the race: correct
             except Exception as e:  # e.g. "database is locked" would be a real bug
