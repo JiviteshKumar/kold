@@ -7,6 +7,7 @@ import { CompanyMark, Description, JobMeta, TrustPanel } from "@/components/job-
 import { Badge, Button, Empty, Sheet, TempMeter, useToast } from "@/components/ui";
 import { api } from "@/lib/api";
 import { ago, temperature } from "@/lib/format";
+import { useDataChanged } from "@/lib/hooks";
 import { play } from "@/lib/sound";
 import type { JobCard } from "@/lib/types";
 
@@ -35,6 +36,8 @@ export default function Discover() {
     setRefreshing(f.refreshing);
     return f;
   }, []);
+
+  useDataChanged(useCallback(() => void load().catch(() => {}), [load]));
 
   useEffect(() => {
     api.get<Feed>("/feed")

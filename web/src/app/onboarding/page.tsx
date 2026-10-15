@@ -6,9 +6,10 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, FileText, Lock, Mail, ShieldCheck, Upload } from "lucide-react";
 import { KoldMark, Wordmark } from "@/components/brand";
 import { PrefsEditor, ProfileEditor } from "@/components/editors";
+import { GmailConnect } from "@/components/gmail-connect";
 import { useMe } from "@/components/providers";
 import { Button, useToast } from "@/components/ui";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, isLite } from "@/lib/api";
 import { play } from "@/lib/sound";
 import type { Preferences, Profile } from "@/lib/types";
 
@@ -263,9 +264,11 @@ function ResumeStep({ onParsed, onSkip, hasExisting }: { onParsed: (p: Profile, 
 
       <div className="mt-6 flex items-start gap-3 rounded-2xl bg-white/[0.02] p-4 text-sm text-ink-2 hairline">
         <Lock size={16} className="mt-0.5 shrink-0 text-ice" />
-        <p>Your resume is read by Kold&apos;s own model running on our server, not sent to any third-party AI service. You can delete everything anytime from Profile.</p>
+        <p>{isLite
+          ? "Your resume is read right here on your device. It is never uploaded anywhere. You can delete everything anytime from Profile."
+          : "Your resume is read by Kold's own model running on our server, not sent to any third-party AI service. You can delete everything anytime from Profile."}</p>
       </div>
-      {!hasExisting && me?.gmail?.configured && (
+      {!isLite && !hasExisting && me?.gmail?.configured && (
         <p className="mt-6 text-center text-sm text-ink-3">
           Already use Kold on another device? <a href="/api/gmail/connect" className="text-ice underline decoration-dotted hover:text-frost">Sign in with Google</a>
         </p>
@@ -303,12 +306,8 @@ function GmailStep({ onBack, onNext }: { onBack: () => void; onNext: () => void 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         {g?.connected ? (
           <Button variant="primary" onClick={onNext}><Check size={16} /> Connected as {g.email}</Button>
-        ) : g?.configured ? (
-          <a href="/api/gmail/connect" className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-[#e0f2fe] via-[#7dd3fc] to-[#38bdf8] px-5 py-2.5 text-sm font-medium text-[#04121f]">
-            <Mail size={16} /> Connect Gmail
-          </a>
         ) : (
-          <p className="rounded-2xl bg-warn/10 p-4 text-sm text-warn">Gmail sign-in isn&apos;t configured on this server yet. You can still browse and save opportunities, and connect later from Profile.</p>
+          <GmailConnect onDone={onNext} />
         )}
         <Button variant="ghost" onClick={onNext}>{g?.connected ? "Continue" : "I'll do this later"} <ArrowRight size={16} /></Button>
       </div>

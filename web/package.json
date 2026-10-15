@@ -6,13 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "predev": "node scripts/write-manifest.mjs",
+    "prebuild": "node scripts/write-manifest.mjs"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.86",
     "clsx": "^2.1.1",
+    "idb": "^8.0.4",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.55.0",
+    "mammoth": "^1.13.0",
     "motion": "^14.1.0",
     "next": "16.4.0",
+    "pdfjs-dist": "^6.4.299",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

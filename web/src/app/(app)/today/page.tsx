@@ -6,9 +6,9 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Check, CheckCircle2, Clock, FileText, Mail, PenLine, RefreshCw, Send, SkipForward, Sunrise } from "lucide-react";
 import { CompanyMark } from "@/components/job-bits";
 import { Badge, Button, Card, Empty, inputCls, useToast } from "@/components/ui";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, isLite, openTailoredResume } from "@/lib/api";
 import { dateTime, tzCity } from "@/lib/format";
-import { useNow } from "@/lib/hooks";
+import { useDataChanged, useNow } from "@/lib/hooks";
 import { play } from "@/lib/sound";
 import type { OutboxEmail, Quality } from "@/lib/types";
 
@@ -25,6 +25,8 @@ export default function TodayPage() {
       toast((e as Error).message, "bad");
     }
   }, [toast]);
+
+  useDataChanged(useCallback(() => void load(), [load]));
 
   useEffect(() => {
     api.get<Today>("/today").then(setData).catch((e) => toast((e as Error).message, "bad"));
@@ -173,6 +175,7 @@ function EmailCard({ email, gmail, onChange }: { email: OutboxEmail; gmail: bool
       toast((e as Error).message, "bad");
       // 409 = the draft changed under us (they replied, it was replaced or sent elsewhere): show the truth.
       if (e instanceof ApiError && e.status === 409) onChange();
+      if (e instanceof ApiError && e.status === 401) window.dispatchEvent(new Event("kold:reconnect"));
     } finally {
       setBusy(null);
     }
@@ -213,11 +216,11 @@ function EmailCard({ email, gmail, onChange }: { email: OutboxEmail; gmail: bool
           />
           <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
             {email.attachment && (
-              <a href={`/api/jobs/${email.user_job_id}/resume.pdf`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-ink-2 hairline hover:text-ink">
+              <button onClick={() => openTailoredResume(email.user_job_id).catch((e) => toast((e as Error).message, "bad"))} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-ink-2 hairline hover:text-ink">
                 <FileText size={13} /> {email.attachment} <span className="text-ink-3">(tailored)</span>
-              </a>
+              </button>
             )}
-            <span>Written by {email.generated_by.startsWith("local-model") ? "Kold's local model" : "a template (local model was offline)"}</span>
+            <span>Written by {email.generated_by.startsWith("local-model") ? "Kold's local model" : email.generated_by.startsWith("Kold writer") ? email.generated_by : "a template (local model was offline)"}</span>
           </div>
 
           <details className="group rounded-2xl bg-white/[0.02] hairline">
@@ -251,7 +254,7 @@ function EmailCard({ email, gmail, onChange }: { email: OutboxEmail; gmail: bool
           <Button variant="ghost" onClick={() => act("skip")} loading={busy === "skip"}><SkipForward size={15} /> Skip</Button>
           <Button variant="ghost" onClick={() => act("rewrite")} loading={busy === "rewrite"}><RefreshCw size={15} /> Rewrite</Button>
           <div className="flex-1" />
-          {!recommendNow && email.status !== "scheduled" && (
+          {!isLite && !recommendNow && email.status !== "scheduled" && (
             <Button variant="outline" onClick={() => act("best")} loading={busy === "best"} disabled={!gmail}><Sunrise size={15} /> Their morning</Button>
           )}
           <Button variant="warm" onClick={() => act("now")} loading={busy === "now"} disabled={!gmail || !quality.ready} sound={false}>

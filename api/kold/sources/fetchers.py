@@ -107,6 +107,47 @@ def ashby(c: httpx.Client, co: dict) -> Iterator[RawJob]:
         )
 
 
+def smartrecruiters(c: httpx.Client, co: dict) -> Iterator[RawJob]:
+    """SmartRecruiters' official public postings API (used by e.g. Swiggy and Freshworks)."""
+    base = f"https://api.smartrecruiters.com/v1/companies/{co['slug']}/postings"
+    offset, seen = 0, 0
+    while True:
+        page = c.get(f"{base}?limit=100&offset={offset}").raise_for_status().json()
+        items = page.get("content", [])
+        for j in items:
+            loc = j.get("location") or {}
+            try:
+                det = c.get(j["ref"]).raise_for_status().json()
+            except Exception:
+                det = {}
+            sections = (det.get("jobAd") or {}).get("sections") or {}
+            desc = "\n\n".join(html_to_text((sections.get(k) or {}).get("text", "")) for k in ("jobDescription", "qualifications", "additionalInformation", "companyDescription"))
+            url = det.get("postingUrl") or f"https://jobs.smartrecruiters.com/{co['slug']}/{j['id']}"
+            yield RawJob(
+                source="smartrecruiters",
+                source_label=f"{co['name']}'s official careers board (SmartRecruiters)",
+                source_url=url,
+                external_id=str(j["id"]),
+                company=co["name"],
+                company_domain=co["domain"],
+                title=(j.get("name") or "").strip(),
+                url=url,
+                apply_url=det.get("applyUrl") or url,
+                department=(j.get("department") or {}).get("label", "") or (j.get("function") or {}).get("label", ""),
+                location=loc.get("fullLocation") or ", ".join(x for x in (loc.get("city"), loc.get("country")) if x),
+                remote_flag=bool(loc.get("remote")),
+                workplace_hint="hybrid" if loc.get("hybrid") else "",
+                country=(loc.get("country") or "").upper(),
+                commitment=(j.get("typeOfEmployment") or {}).get("label", ""),
+                description=desc.strip()[:20000],
+                posted_at=parse_dt(j.get("releasedDate")),
+            )
+        seen += len(items)
+        offset += 100
+        if not items or seen >= page.get("totalFound", 0) or offset >= 1000:
+            break
+
+
 def remotive(c: httpx.Client) -> Iterator[RawJob]:
     for j in c.get("https://remotive.com/api/remote-jobs").raise_for_status().json().get("jobs", []):
         loc = j.get("candidate_required_location", "") or ""
@@ -212,7 +253,7 @@ def arbeitnow(c: httpx.Client) -> Iterator[RawJob]:
         )
 
 
-ATS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby}
+ATS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby, "smartrecruiters": smartrecruiters}
 FEEDS = {"remotive": remotive, "remoteok": remoteok, "himalayas": himalayas, "arbeitnow": arbeitnow}
 
 

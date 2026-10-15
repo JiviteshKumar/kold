@@ -2,14 +2,14 @@
 
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, CalendarClock, CheckCircle2, Flame, Inbox, PenLine, Snowflake, Sunrise } from "lucide-react";
 import clsx from "clsx";
 import { CompanyMark } from "@/components/job-bits";
 import { Badge, Card, TempMeter, useToast } from "@/components/ui";
-import { api } from "@/lib/api";
+import { api, isLite } from "@/lib/api";
 import { ago, dateShort, daysUntil, LABEL_META, STAGE_META } from "@/lib/format";
-import { useNow } from "@/lib/hooks";
+import { useDataChanged, useNow } from "@/lib/hooks";
 import type { HomeData } from "@/lib/types";
 
 const PIPE = ["liked", "applied", "reaching_out", "replied", "interview", "offer"];
@@ -18,6 +18,11 @@ export default function HomePage() {
   const toast = useToast();
   const now = useNow();
   const [d, setD] = useState<HomeData | null>(null);
+
+  const reload = useCallback(() => {
+    api.get<HomeData>("/home").then(setD).catch(() => {});
+  }, []);
+  useDataChanged(reload);
 
   useEffect(() => {
     api.get<HomeData>("/home").then(setD).catch((e) => toast(e.message, "bad"));
@@ -165,6 +170,18 @@ export default function HomePage() {
               <Quiet icon={<Snowflake size={16} />} text="Swipe right on jobs in Discover to start your pipeline." />
             )}
           </Panel>
+
+          {isLite && (
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="md:col-span-2">
+              <Link href="/full" className="flex items-center gap-4 rounded-[var(--radius)] bg-gradient-to-br from-ice/10 via-violet/5 to-ember/10 p-5 hairline">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">You&apos;re on Kold Lite</p>
+                  <p className="mt-0.5 text-sm text-ink-2">It runs on this device and works while Kold is open. Want reply checks in the background, sends at their morning and notifications? Get the free full version.</p>
+                </div>
+                <ArrowRight size={18} className="shrink-0 text-ice" />
+              </Link>
+            </motion.div>
+          )}
 
           {/* 6. What Kold did */}
           <Panel i={5} className="md:col-span-2" icon={<CheckCircle2 size={17} />} title="What Kold did recently">

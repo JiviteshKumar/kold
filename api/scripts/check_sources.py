@@ -10,6 +10,7 @@ URLS = {
     "greenhouse": "https://boards-api.greenhouse.io/v1/boards/{}/jobs",
     "lever": "https://api.lever.co/v0/postings/{}?mode=json",
     "ashby": "https://api.ashbyhq.com/posting-api/job-board/{}",
+    "smartrecruiters": "https://api.smartrecruiters.com/v1/companies/{}/postings",
 }
 
 if __name__ == "__main__":
@@ -18,5 +19,5 @@ if __name__ == "__main__":
     if r.status_code != 200:
         sys.exit(f"Not found ({r.status_code}). Check the slug in the company's careers page URL.")
     data = r.json()
-    jobs = data if isinstance(data, list) else data.get("jobs", [])
+    jobs = data if isinstance(data, list) else data.get("jobs", data.get("content", []))
     print(f"OK: {len(jobs)} open postings on {ats}/{slug}")

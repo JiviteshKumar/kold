@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Bell, House, Inbox, Layers, Send, Snowflake, User, Volume2, VolumeX } from "lucide-react";
 import clsx from "clsx";
 import { KoldMark, Wordmark } from "./brand";
+import { GmailConnect } from "./gmail-connect";
 import { useMe } from "./providers";
 import { Sheet } from "./ui";
 import { api } from "@/lib/api";
@@ -112,13 +113,24 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <p className="leading-relaxed">Every email waits for your approval. Nothing is sent on its own.</p>
+          {me.lite && (
+            <Link href="/full" className="mt-2 block rounded-xl bg-gradient-to-br from-ice/10 to-ember/10 p-3 text-ink-2 hairline hover:text-ink">
+              <span className="font-medium text-ink">Kold Lite</span> runs on this device. <span className="text-ice">Get the full version →</span>
+            </Link>
+          )}
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         {me.sandbox && (
           <div className="flex items-center justify-center gap-2 bg-warn/15 px-4 py-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] text-center text-xs font-medium text-warn">
-            Sandbox mode: emails are simulated on this computer and never actually sent.
+            {me.lite ? "Demo mailbox: emails are simulated on this device and never actually sent." : "Sandbox mode: emails are simulated on this computer and never actually sent."}
+          </div>
+        )}
+        {me.lite && me.gmail?.connected && !me.gmail.demo && !me.gmail.session_ok && (
+          <div className="flex flex-wrap items-center justify-center gap-3 bg-ice/10 px-4 py-2 text-center text-xs text-frost">
+            <span>Gmail needs a quick reconnect to send emails and check replies (Google asks every hour for apps without a server).</span>
+            <GmailConnect reconnect />
           </div>
         )}
         {/* Top bar */}

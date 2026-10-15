@@ -1,5 +1,5 @@
 {
-  "_comment": "Employers whose official applicant-tracking job boards Kold reads directly. Every slug here was verified live. Add more with: python -m scripts.check_sources <ats> <slug>",
+  "_comment": "Employers whose official applicant-tracking job boards Kold reads directly (Greenhouse, Lever, Ashby, SmartRecruiters). Every slug here was verified live and checked to be the real company. Find more with: python -m scripts.probe_boards / python -m scripts.probe_more",
   "greenhouse": [
     {
       "slug": "groww",
@@ -160,6 +160,71 @@
       "slug": "rubrik",
       "name": "Rubrik",
       "domain": "rubrik.com"
+    },
+    {
+      "slug": "zenoti",
+      "name": "Zenoti",
+      "domain": "zenoti.com"
+    },
+    {
+      "slug": "fivetran",
+      "name": "Fivetran",
+      "domain": "fivetran.com"
+    },
+    {
+      "slug": "hackerrank",
+      "name": "HackerRank",
+      "domain": "hackerrank.com"
+    },
+    {
+      "slug": "adyen",
+      "name": "Adyen",
+      "domain": "adyen.com"
+    },
+    {
+      "slug": "grafanalabs",
+      "name": "Grafana Labs",
+      "domain": "grafana.com"
+    },
+    {
+      "slug": "cockroachlabs",
+      "name": "Cockroach Labs",
+      "domain": "cockroachlabs.com"
+    },
+    {
+      "slug": "scaleai",
+      "name": "Scale AI",
+      "domain": "scale.com"
+    },
+    {
+      "slug": "mozilla",
+      "name": "Mozilla",
+      "domain": "mozilla.org"
+    },
+    {
+      "slug": "wikimedia",
+      "name": "Wikimedia Foundation",
+      "domain": "wikimediafoundation.org"
+    },
+    {
+      "slug": "netlify",
+      "name": "Netlify",
+      "domain": "netlify.com"
+    },
+    {
+      "slug": "assemblyai",
+      "name": "AssemblyAI",
+      "domain": "assemblyai.com"
+    },
+    {
+      "slug": "typeform",
+      "name": "Typeform",
+      "domain": "typeform.com"
+    },
+    {
+      "slug": "webflow",
+      "name": "Webflow",
+      "domain": "webflow.com"
     }
   ],
   "lever": [
@@ -289,6 +354,88 @@
       "slug": "plaid",
       "name": "Plaid",
       "domain": "plaid.com"
+    },
+    {
+      "slug": "bureau",
+      "name": "Bureau",
+      "domain": "bureau.id"
+    },
+    {
+      "slug": "clickhouse",
+      "name": "ClickHouse",
+      "domain": "clickhouse.com"
+    },
+    {
+      "slug": "snowflake",
+      "name": "Snowflake",
+      "domain": "snowflake.com"
+    },
+    {
+      "slug": "anyscale",
+      "name": "Anyscale",
+      "domain": "anyscale.com"
+    },
+    {
+      "slug": "astronomer",
+      "name": "Astronomer",
+      "domain": "astronomer.io"
+    },
+    {
+      "slug": "redis",
+      "name": "Redis",
+      "domain": "redis.io"
+    },
+    {
+      "slug": "deepgram",
+      "name": "Deepgram",
+      "domain": "deepgram.com"
+    },
+    {
+      "slug": "prefect",
+      "name": "Prefect",
+      "domain": "prefect.io"
+    },
+    {
+      "slug": "langchain",
+      "name": "LangChain",
+      "domain": "langchain.com"
+    },
+    {
+      "slug": "synthesia",
+      "name": "Synthesia",
+      "domain": "synthesia.io"
+    },
+    {
+      "slug": "hex",
+      "name": "Hex",
+      "domain": "hex.tech"
+    }
+  ],
+  "smartrecruiters": [
+    {
+      "slug": "swiggy",
+      "name": "Swiggy",
+      "domain": "swiggy.com"
+    },
+    {
+      "slug": "freshworks",
+      "name": "Freshworks",
+      "domain": "freshworks.com"
+    },
+    {
+      "slug": "unacademy",
+      "name": "Unacademy",
+      "domain": "unacademy.com"
+    },
+    {
+      "slug": "nobroker",
+      "name": "NoBroker",
+      "domain": "nobroker.in"
+    },
+    {
+      "slug": "upstox",
+      "name": "Upstox",
+      "domain": "upstox.com"
     }
   ]
 }

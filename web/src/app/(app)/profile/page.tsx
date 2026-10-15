@@ -6,9 +6,12 @@ import { Suspense, useEffect, useState } from "react";
 import { BellRing, Cpu, FileText, Link2Off, Mail, ShieldCheck, Trash2, Upload } from "lucide-react";
 import clsx from "clsx";
 import { PrefsEditor, ProfileEditor } from "@/components/editors";
+import { AiCard } from "@/components/ai-card";
+import { GmailConnect } from "@/components/gmail-connect";
+import Link from "next/link";
 import { useMe } from "@/components/providers";
 import { Badge, Button, Card, Confirm, useToast } from "@/components/ui";
-import { api } from "@/lib/api";
+import { api, isLite } from "@/lib/api";
 import { ago } from "@/lib/format";
 import type { Preferences, Profile } from "@/lib/types";
 
@@ -135,11 +138,10 @@ function ProfileInner() {
                     toast((e as Error).message, "bad");
                   }
                 }}><Link2Off size={15} /> Disconnect & revoke</Button>
-              ) : g?.configured ? (
-                <a href="/api/gmail/connect" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#e0f2fe] via-[#7dd3fc] to-[#38bdf8] px-5 py-2.5 text-sm font-medium text-[#04121f]"><Mail size={15} /> Connect Gmail</a>
               ) : (
-                <p className="text-sm text-warn">Google sign-in isn&apos;t configured on this server yet (see README).</p>
+                <GmailConnect />
               )}
+              {g?.connected && isLite && !g.demo && !g.session_ok && <div className="mt-3"><GmailConnect reconnect /></div>}
             </div>
           </Card>
 
@@ -152,13 +154,49 @@ function ProfileInner() {
             <Button className="mt-4" onClick={enablePush}>Enable notifications</Button>
           </Card>
 
+          {isLite && <AiCard />}
+          {isLite && (
+            <Link href="/full" className="block rounded-[var(--radius)] bg-gradient-to-br from-ice/10 to-ember/10 p-5 hairline">
+              <p className="font-medium">Get the full version</p>
+              <p className="mt-1 text-sm text-ink-2">Background reply checks, scheduled sends, notifications and more. Free, with a 30-second walkthrough.</p>
+            </Link>
+          )}
+          {isLite && (
+            <Card className="p-5">
+              <h2 className="font-medium">Back up or move your data</h2>
+              <p className="mt-1 text-sm text-ink-2">Kold Lite keeps everything on this device. Download a backup to keep it safe or move it to another device.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button onClick={async () => { const { exportBackup } = await import("@/local/backup"); await exportBackup(); }}>Download backup</Button>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm hairline hover:bg-white/5">
+                  Restore from backup
+                  <input type="file" accept="application/json" className="hidden" onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    try {
+                      const { importBackup } = await import("@/local/backup");
+                      await importBackup(f);
+                      toast("Backup restored", "ok");
+                      await refresh();
+                    } catch (err) {
+                      toast((err as Error).message, "bad");
+                    }
+                  }} />
+                </label>
+              </div>
+            </Card>
+          )}
+
           <Card className="p-5">
             <div className="flex items-center gap-3">
               <Cpu size={18} className="text-violet" />
               <h2 className="flex-1 font-medium">How Kold thinks</h2>
             </div>
             <ul className="mt-3 space-y-2 text-sm text-ink-2">
-              <li>· Writing &amp; reading: Kold&apos;s own local model <b className="text-ink">{me?.engine?.local_model}</b>, {me?.engine?.local_model_online ? <span className="text-ok">online</span> : <span className="text-warn">offline (simple templates used instead, clearly labeled)</span>}</li>
+              {isLite ? (
+                <li>· Writing: Kold&apos;s research-based writer builds every email from your resume facts{me?.engine?.local_model_online ? ", polished by the on-device AI" : ""}. Jobs: refreshed once a day from {me?.feed ? `${me.feed.sources_ok} official sources (${me.feed.jobs.toLocaleString()} live listings)` : "official sources"}; matching re-runs every time you open Kold.</li>
+              ) : (
+                <li>· Writing &amp; reading: Kold&apos;s own local model <b className="text-ink">{me?.engine?.local_model}</b>, {me?.engine?.local_model_online ? <span className="text-ok">online</span> : <span className="text-warn">offline (simple templates used instead, clearly labeled)</span>}</li>
+              )}
               <li>· Reply classifier: {me?.engine?.reply_model_trained ? "trained on your confirmed labels" : "rules + local model; learns once you've confirmed ~30 reply labels"}</li>
               <li>· Safety limits: at most {me?.limits?.max_emails_per_day} emails/day and {me?.limits?.max_followups} follow-ups per contact</li>
               <li>· No third-party AI services. No guessed email addresses. No job board scraping that breaks site rules.</li>

@@ -193,7 +193,9 @@ export type Me = {
   profile?: Profile | null;
   preferences?: Preferences;
   resume?: { filename: string; uploaded_at: string } | null;
-  gmail?: { configured: boolean; connected: boolean; email: string; scopes: { name: string; why: string }[] };
+  gmail?: { configured: boolean; connected: boolean; email: string; scopes: { name: string; why: string }[]; google?: boolean; demo?: boolean; session_ok?: boolean };
+  lite?: boolean;
+  feed?: { generated_at: string; jobs: number; sources_ok: number; sources_total: number; companies: number } | null;
   engine?: { local_model: string; local_model_online: boolean; reply_model_trained: boolean };
   limits?: { max_emails_per_day: number; max_followups: number };
   sandbox?: boolean;

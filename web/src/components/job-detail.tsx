@@ -7,7 +7,7 @@ import { ArrowUpRight, CheckCircle2, Download, ExternalLink, Mail, Play, Plus, R
 import clsx from "clsx";
 import { CompanyMark, Description, JobMeta, TrustPanel } from "./job-bits";
 import { Badge, Button, Confirm, Field, inputCls, Sheet, Spinner, useToast } from "./ui";
-import { api } from "@/lib/api";
+import { api, openTailoredResume } from "@/lib/api";
 import { ago, dateShort, dateTime, LABEL_META, STAGE_META } from "@/lib/format";
 import { play } from "@/lib/sound";
 import type { Campaign, Contact, JobCard, Reply } from "@/lib/types";
@@ -356,9 +356,9 @@ function ResumeTab({ d, onChanged }: { d: Detail; onChanged: () => void }) {
       <div className="flex flex-wrap gap-2">
         <Button variant={changes ? "outline" : "primary"} onClick={tailor} loading={busy}><Wand2 size={15} /> {changes ? "Re-tailor" : "Tailor my resume"}</Button>
         {changes && (
-          <a href={`/api/jobs/${d.user_job_id}/resume.pdf`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm hairline hover:bg-white/5">
+          <button onClick={() => openTailoredResume(d.user_job_id).catch((e) => toast((e as Error).message, "bad"))} className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm hairline hover:bg-white/5">
             <Download size={15} /> Download PDF
-          </a>
+          </button>
         )}
         <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-ink-3 hover:text-ink">Posting <ExternalLink size={14} /></a>
       </div>

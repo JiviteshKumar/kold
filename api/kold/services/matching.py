@@ -24,7 +24,7 @@ TYPE_LABEL = {"internship": "Internship", "full_time": "Full-time", "part_time":
 
 # Role families: a user who wants "Data Analyst" should also see "Analytics Intern" or "BI Associate".
 ROLE_FAMILIES: list[tuple[str, list[str]]] = [
-    (r"data analy|business analy|analytics|\bbi\b|business intelligence", ["analyst", "analytics", "business intelligence", "bi", "insights", "reporting"]),
+    (r"data analy|business analy|analytics|\bbi\b|business intelligence", ["data analyst", "business analyst", "product analyst", "analytics", "business intelligence", "bi analyst", "bi developer", "insights analyst", "reporting analyst", "data analysis"]),
     (r"data scien|machine learning|\bml\b|\bai\b|deep learning|nlp|computer vision", ["machine learning", "ml", "ai", "data scientist", "data science", "applied scientist", "deep learning", "nlp", "computer vision", "llm"]),
     (r"data engineer", ["data engineer", "data platform", "etl", "analytics engineer"]),
     (r"back-?end|server|api", ["backend", "back-end", "back end", "software engineer", "sde", "software developer", "platform engineer", "api"]),
@@ -46,6 +46,16 @@ ROLE_FAMILIES: list[tuple[str, list[str]]] = [
 ]
 
 
+# A family match ("Related to ...") is refused when the title is plainly another function the user never asked for,
+# so a Data Analyst is not shown "Benefits Analyst" and an ML engineer is not shown "Marketing AI Engineer".
+OTHER_FUNCTIONS = ["benefits", "payable", "receivable", "payroll", "accounting", "tax", "legal", "marketing", "sales",
+                   "recruit", "recruiting", "talent", "procurement", "credit", "compliance", "facilities", "clinical"]
+
+
+def _other_function(role: str, title: str) -> bool:
+    return any(_term_re(w).search(title) and not _term_re(w).search(role) for w in OTHER_FUNCTIONS)
+
+
 def role_match(roles: list[str], title: str) -> tuple[int, str]:
     """(points, which role matched). Exact role in title = 40; same role family = 25."""
     for r in roles:
@@ -57,7 +67,7 @@ def role_match(roles: list[str], title: str) -> tuple[int, str]:
             return 32, r
     for r in roles:
         for family, terms in ROLE_FAMILIES:
-            if re.search(family, r, re.I) and any(_term_re(t).search(title) for t in terms):
+            if re.search(family, r, re.I) and any(_term_re(t).search(title) for t in terms) and not _other_function(r, title):
                 return 25, r
     return 0, ""
 

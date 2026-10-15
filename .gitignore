@@ -25,3 +25,6 @@ Thumbs.db
 .claude/
 web/AGENTS.md
 web/CLAUDE.md
+
+# generated per build
+web/public/manifest.webmanifest

@@ -16,7 +16,7 @@ SCAM_PATTERNS = [
     (r"\bguaranteed (job|placement)\b", "Promises a guaranteed job."),
 ]
 FREE_MAIL = re.compile(r"[\w.+-]+@(gmail|yahoo|outlook|hotmail|rediffmail|proton)\.\w+", re.I)
-EMPLOYER_BOARDS = {"greenhouse", "lever", "ashby"}
+EMPLOYER_BOARDS = {"greenhouse", "lever", "ashby", "smartrecruiters"}
 
 
 def score(source: str, description: str, posted_at: datetime | None, company: str) -> tuple[int, list[dict]]:

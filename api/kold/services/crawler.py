@@ -1,6 +1,7 @@
 """Pulls fresh postings from every source, keeps only what someone in India can actually take,
 deduplicates, and closes listings that the employer has taken down."""
 import logging
+import re
 from collections import defaultdict
 from datetime import timedelta
 
@@ -17,6 +18,13 @@ log = logging.getLogger(__name__)
 
 def _scope_key(rj: RawJob) -> str:
     return f"{rj.source}:{rj.company}" if rj.source in trust.EMPLOYER_BOARDS else rj.source
+
+
+PLACEHOLDER_TITLE = re.compile(r"^\s*(test|testing|dummy|sample|demo|do not apply|ignore|tbd|xxx+|asdf)\b|\b(test (job|posting|role|req))\b", re.I)
+
+
+def _placeholder(rj: RawJob) -> bool:
+    return bool(PLACEHOLDER_TITLE.search(rj.title)) or len((rj.description or "").strip()) < 80
 
 
 def run(session: Session) -> CrawlRun:
@@ -38,8 +46,8 @@ def run(session: Session) -> CrawlRun:
         kept = 0
         for rj in result:
             ok_scopes.add(_scope_key(rj))
-            if not rj.title or not rj.company:
-                continue
+            if not rj.title or not rj.company or _placeholder(rj):
+                continue  # test/dummy postings employers forgot to remove are not real openings
             place = geo.classify(rj.location, rj.remote_flag, rj.workplace_hint, rj.restrictions, rj.tz_offsets, rj.country)
             if place.workplace == "remote" and place.region != "india" and geo.description_restricts(rj.description):
                 place = geo.Place("remote", "abroad", False, place.city)  # "Worldwide" on the board, "US only" in the text

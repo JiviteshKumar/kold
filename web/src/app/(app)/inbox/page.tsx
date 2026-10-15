@@ -10,6 +10,7 @@ import { CompanyMark } from "@/components/job-bits";
 import { Badge, Button, Confirm, Empty, inputCls, Sheet, useToast } from "@/components/ui";
 import { api } from "@/lib/api";
 import { ago, dateShort, dateTime, LABEL_META } from "@/lib/format";
+import { useDataChanged } from "@/lib/hooks";
 import { play } from "@/lib/sound";
 import type { Conversation, ConvMessage, Quality, Reply } from "@/lib/types";
 
@@ -63,6 +64,8 @@ function Inbox() {
     setConnected(d.gmail_connected);
     return d.conversations;
   }, []);
+
+  useDataChanged(useCallback(() => void load().catch(() => {}), [load]));
 
   useEffect(() => {
     api.get<{ conversations: Conversation[]; gmail_connected: boolean }>("/conversations")

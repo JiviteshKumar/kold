@@ -1,6 +1,6 @@
 # Kold
 
-**Cold outreach, warm replies.** · [Live page](https://jiviteshkumar.github.io/kold/)
+**Cold outreach, warm replies.** · [Open Kold Lite](https://jiviteshkumar.github.io/kold/app/) · [Home page](https://jiviteshkumar.github.io/kold/)
 
  Kold reads your resume, finds genuine opportunities you can actually take from India (on-site, or remote with US/UK/EU/global companies that accept Indian candidates), and runs polite, tailored cold-email outreach. You approve every single email.
 
@@ -8,6 +8,20 @@
 web/   Next.js 16 PWA (installable on Android + iPhone, no app stores)
 api/   FastAPI backend: sources, matching, contact discovery, Gmail, local AI
 ```
+
+## Two versions
+
+| | **Kold Lite** (open the link) | **Kold Full** (your own free server) |
+|---|---|---|
+| Install | Nothing. Open the link, *Add to Home Screen* | One command on a free Oracle server, or your PC |
+| Job feed | Scanned daily from official boards by GitHub Actions; matched on your phone every time you open the app | Scanned every few hours on your server |
+| AI | Optional on-device model (Qwen3.5 0.8B–4B via WebGPU), downloaded only if you agree. Works without it | Qwen3.5 4B via Ollama |
+| Email | Your Gmail, sent from your phone while Kold is open | Your Gmail, sent and checked around the clock |
+| Data | Only on your device (export a backup anytime) | Your server, all your devices |
+
+**How Lite works:** `.github/workflows/pages.yml` runs once a day (06:00 IST). It crawls the same official sources as the server (`api/scripts/export_feed.py`), keeps listings that pass the trust and India-eligibility checks, and publishes them with the app to GitHub Pages at `/kold/data/`. When you open the app it downloads the feed only if it changed, then scores every listing against your profile on your device, drafts the day's emails, checks reminders and looks for replies. It repeats every 15 minutes while open. Everything you do in Lite runs through `web/src/local/`, which mirrors the server's API so both versions share the same screens.
+
+**Lite + real Gmail:** create a Google OAuth *Web* client (see Gmail setup), add `https://jiviteshkumar.github.io` to its **Authorized JavaScript origins**, then set the repository variable `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (Settings → Secrets and variables → Actions → Variables) and re-run the workflow. Until then Lite offers a demo mailbox. Note: GitHub pauses scheduled workflows after 60 days without repository activity; re-enable it from the Actions tab if that happens.
 
 ## How it works
 
@@ -103,5 +117,5 @@ Push notifications: generate keys with `python -m scripts.gen_vapid`, then add t
 - **Contacts:** many companies don't publish an email on their site. Kold then says so and lets you add one you know (from a referral, LinkedIn or an event). It never guesses.
 - **Writing model:** `qwen3.5:4b` is fast on a laptop GPU but can over-reach. The claim check catches unsupported first-person sentences and shows them to you; still read every draft. A larger model (set `KOLD_LLM_MODEL`) writes better but slower.
 - **Reply classifier:** starts with rules plus the local model. After you've confirmed about 30 reply labels in the Inbox, run `python -m scripts.train_classifier` to train Kold's own model on *your real data* (nothing synthetic).
-- **Sources:** 57 verified employer boards plus 4 feeds. Add more with `python -m scripts.check_sources <greenhouse|lever|ashby> <slug>`, then list them in `api/kold/sources/companies.json`.
+- **Sources:** 86 verified employer boards (Greenhouse, Lever, Ashby, SmartRecruiters) plus 4 feeds. Add more with `python -m scripts.check_sources <greenhouse|lever|ashby|smartrecruiters> <slug>`, then list them in `api/kold/sources/companies.json`.
 - **Not yet:** Outlook support, Postgres migrations. (On a new device, "Sign in with Google" opens your existing account.)

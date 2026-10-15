@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { isMuted } from "./sound";
 
 /** Current time, refreshed every 30s. Safe to use during render (no impure Date.now() calls in components). */
@@ -61,4 +61,12 @@ export function useIntroSeen(): boolean | null {
     },
     () => null,
   );
+}
+
+/** Re-run `load` when the Lite engine finishes its background work (new matches, replies, drafts). */
+export function useDataChanged(load: () => void): void {
+  useEffect(() => {
+    window.addEventListener("kold:data-changed", load);
+    return () => window.removeEventListener("kold:data-changed", load);
+  }, [load]);
 }
