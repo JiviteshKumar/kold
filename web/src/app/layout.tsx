@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { Providers } from "@/components/providers";
+import { EARLY_SCRIPT } from "@/lib/install-early";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -35,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <div className="ambient" aria-hidden />
         <Providers>{children}</Providers>
+        <Script id="kold-install" strategy="beforeInteractive">{EARLY_SCRIPT}</Script>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, FileText, Lock, Mail, ShieldCheck, Upload } from "lucide-react";
 import { KoldMark, Wordmark } from "@/components/brand";
+import { InstallCard } from "@/components/install";
 import { PrefsEditor, ProfileEditor } from "@/components/editors";
 import { GmailConnect } from "@/components/gmail-connect";
 import { useMe } from "@/components/providers";
@@ -208,6 +209,7 @@ function ResumeStep({ onParsed, onSkip, hasExisting }: { onParsed: (p: Profile, 
         title="Every opportunity starts cold."
         body="Drop your resume. Kold builds your profile from it, then finds genuine openings and helps you warm them up, one approved email at a time."
       />
+      <InstallCard compact className="mb-5" />
 
       <motion.div
         onDragOver={(e) => { e.preventDefault(); setDrag(true); }}

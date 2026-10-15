@@ -1,0 +1,2 @@
+/** Catches the browser's install prompt before the app loads (used by app/layout.tsx; see lib/install.ts). */
+export const EARLY_SCRIPT = `window.__koldInstall=null;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__koldInstall=e;window.dispatchEvent(new Event("kold:install-ready"))});window.addEventListener("appinstalled",function(){window.__koldInstall=null;window.dispatchEvent(new Event("kold:installed"))});`;

@@ -8,6 +8,7 @@ import { Bell, House, Inbox, Layers, Send, Snowflake, User, Volume2, VolumeX } f
 import clsx from "clsx";
 import { KoldMark, Wordmark } from "./brand";
 import { GmailConnect } from "./gmail-connect";
+import { InstallBanner } from "./install";
 import { useMe } from "./providers";
 import { Sheet } from "./ui";
 import { api } from "@/lib/api";
@@ -133,6 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <GmailConnect reconnect />
           </div>
         )}
+        <InstallBanner />
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-bg/70 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-xl md:px-8">
           <Link href="/home" className="flex items-center gap-2 md:hidden">
