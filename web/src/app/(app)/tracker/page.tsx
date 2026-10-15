@@ -61,7 +61,7 @@ function Tracker() {
       </div>
 
       {!items ? (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-36 rounded-3xl" />)}</div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-36 rounded-3xl" />)}</div>
       ) : items.length === 0 ? (
         <Empty icon={<Layers />} title="Nothing saved yet" body="Swipe right on opportunities in Discover and they'll land here." action={<Link href="/discover"><Button variant="primary">Go to Discover</Button></Link>} />
       ) : stage === "all" ? (
@@ -81,7 +81,7 @@ function Tracker() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((j, i) => <TrackerCard key={j.user_job_id} job={j} i={i} onOpen={() => open(j.user_job_id)} />)}
           {!visible.length && <p className="text-sm text-ink-3">Nothing here yet.</p>}
         </div>

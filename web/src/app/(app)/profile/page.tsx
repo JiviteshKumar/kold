@@ -36,6 +36,7 @@ function ProfileInner() {
   const profile = edited ?? me?.profile ?? null;
   const prefs = editedPrefs ?? me?.preferences ?? null;
   const [saving, setSaving] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [del, setDel] = useState(false);
 
   useEffect(() => {
@@ -169,20 +170,25 @@ function ProfileInner() {
                 <Button onClick={async () => { const { exportBackup } = await import("@/local/backup"); await exportBackup(); }}>Download backup</Button>
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm hairline hover:bg-white/5">
                   Restore from backup
-                  <input type="file" accept="application/json" className="hidden" onChange={async (e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    try {
-                      const { importBackup } = await import("@/local/backup");
-                      await importBackup(f);
-                      toast("Backup restored", "ok");
-                      await refresh();
-                    } catch (err) {
-                      toast((err as Error).message, "bad");
-                    }
+                  <input type="file" accept="application/json" className="hidden" onChange={(e) => {
+                    setRestoreFile(e.target.files?.[0] ?? null);
+                    e.target.value = ""; // the same file can be picked again
                   }} />
                 </label>
               </div>
+              <Confirm open={!!restoreFile} onClose={() => setRestoreFile(null)} title="Replace the data on this device?" confirmLabel="Restore"
+                body="Your profile, tracker, emails and inbox on this device are replaced with the backup's. Your Gmail connection and today's job feed stay as they are."
+                onConfirm={async () => {
+                  try {
+                    const { importBackup } = await import("@/local/backup");
+                    await importBackup(restoreFile!);
+                    toast("Backup restored", "ok");
+                    await refresh();
+                    window.dispatchEvent(new Event("kold:run-daily"));
+                  } catch (err) {
+                    toast((err as Error).message, "bad");
+                  }
+                }} />
             </Card>
           )}
 

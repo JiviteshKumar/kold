@@ -113,7 +113,7 @@ export function ProfileEditor({ value, onChange }: { value: Profile; onChange: (
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Full name"><input className={inputCls} value={value.name} onChange={(e) => set("name", e.target.value)} /></Field>
         <Field label="Headline"><input className={inputCls} value={value.headline} placeholder="e.g. Data analyst · Python, SQL" onChange={(e) => set("headline", e.target.value)} /></Field>
         <Field label="Email"><input className={inputCls} value={value.email} onChange={(e) => set("email", e.target.value)} /></Field>
@@ -133,7 +133,7 @@ export function ProfileEditor({ value, onChange }: { value: Profile; onChange: (
         <div className="space-y-3">
           {value.experience.map((e, i) => (
             <div key={i} className="space-y-3 rounded-2xl bg-white/[0.02] p-4 hairline">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <input className={inputCls} placeholder="Title" value={e.title} onChange={(ev) => setExp(i, { title: ev.target.value })} />
                 <input className={inputCls} placeholder="Company" value={e.company} onChange={(ev) => setExp(i, { company: ev.target.value })} />
                 <input className={inputCls} placeholder="Start" value={e.start ?? ""} onChange={(ev) => setExp(i, { start: ev.target.value })} />
@@ -175,7 +175,7 @@ export function ProfileEditor({ value, onChange }: { value: Profile; onChange: (
         </div>
       </section>
 
-      <section className="grid gap-6 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Field label="Achievements"><Lines values={value.achievements} onChange={(v) => set("achievements", v)} placeholder="Add achievement" /></Field>
         <Field label="Certifications"><Lines values={value.certifications} onChange={(v) => set("certifications", v)} placeholder="Add certification" /></Field>
       </section>
@@ -241,7 +241,7 @@ export function PrefsEditor({ value, onChange, suggestedRoles = [] }: { value: P
           <Toggle checked={value.include_unclear_remote} onChange={(v) => set("include_unclear_remote", v)} title="Also show remote roles that don't state eligibility" sub="Marked clearly so you can check before applying" />
         </div>
       </Field>
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Field label="Never show these companies" hint="e.g. your current employer">
           <TagInput values={value.exclude_companies} onChange={(v) => set("exclude_companies", v)} placeholder="Company name" />
         </Field>

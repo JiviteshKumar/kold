@@ -405,7 +405,7 @@ function ReplyActions({ msg, onChanged }: { msg: Reply; onChanged: () => Promise
       {msg.label === "bounce" && <p className="text-sm text-bad">This address doesn&apos;t exist anymore. Outreach stopped. Pick another contact from the job in Tracker.</p>}
 
       {canReply && !msg.handled && !draft && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ChoiceCard icon={<UserRound size={20} />} title="I'll reply myself" body={demoBox ? "In Gmail this opens the email so you can answer it yourself. Kold notices when you've replied." : "Opens this email in Gmail. Kold notices when you've replied."} onClick={() => mode("self")} loading={busy === "self"} />
           <ChoiceCard warm icon={<Bot size={20} />} title="Draft a reply for me" body="Kold writes a reply from your profile. You edit it and decide whether to send." onClick={() => mode("assisted")} loading={busy === "assisted"} />
         </div>

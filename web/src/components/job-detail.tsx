@@ -97,7 +97,7 @@ function Overview({ d, onChanged }: { d: Detail; onChanged: () => void }) {
       <JobMeta job={d} />
       {!d.active && <p className="rounded-2xl bg-bad/10 p-3 text-sm text-bad">The employer has taken this listing down or it expired.</p>}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <a href={d.apply_url || d.url} target="_blank" rel="noreferrer" onClick={() => play("whoosh")}
           className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#e0f2fe] via-[#7dd3fc] to-[#38bdf8] px-4 py-3 text-sm font-medium text-[#04121f]">
           Apply on {d.source === "greenhouse" || d.source === "lever" || d.source === "ashby" ? `${d.company}'s site` : "the original posting"} <ArrowUpRight size={16} />
@@ -121,7 +121,7 @@ function Overview({ d, onChanged }: { d: Detail; onChanged: () => void }) {
         </div>
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Application deadline" hint="Kold reminds you 3 days before and on the day.">
           <input type="date" className={inputCls} value={deadline} onChange={(e) => setDeadline(e.target.value)}
             onBlur={() => patch({ deadline: deadline ? `${deadline}T18:00:00` : null }, deadline ? "Reminder set" : undefined)} />

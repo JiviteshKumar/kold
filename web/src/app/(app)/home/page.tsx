@@ -50,9 +50,9 @@ export default function HomePage() {
       </motion.div>
 
       {!d ? (
-        <div className="grid gap-4 md:grid-cols-2">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-44 rounded-3xl" />)}</div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-44 rounded-3xl" />)}</div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* 1. Replies: the most important thing */}
           <Panel i={0} className="md:col-span-2" warm={d.replies_waiting > 0} icon={<Inbox size={17} />} title="Replies from companies"
             action={<Link href="/inbox" className="flex items-center gap-1 text-xs text-ice hover:text-frost">Open inbox <ArrowRight size={13} /></Link>}>
