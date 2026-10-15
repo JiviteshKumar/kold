@@ -12,7 +12,9 @@ export default function Home() {
   const { me, loading } = useMe();
   // The intro plays once per app launch, not on every navigation (`?intro=full` replays it).
   const stored = useIntroSeen();
-  const seen = stored && typeof location !== "undefined" && location.search.includes("intro=") ? false : stored;
+  // Read once: the install guide removes `?install=` from the address right after the first render.
+  const [search] = useState(() => (typeof location !== "undefined" ? location.search : ""));
+  const seen = search.includes("install=") ? true : stored && search.includes("intro=") ? false : stored;
   const [finished, setFinished] = useState(false);
   const introDone = seen === true || finished;
 

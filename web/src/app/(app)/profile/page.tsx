@@ -8,7 +8,6 @@ import clsx from "clsx";
 import { PrefsEditor, ProfileEditor } from "@/components/editors";
 import { AiCard } from "@/components/ai-card";
 import { GmailConnect } from "@/components/gmail-connect";
-import { InstallCard } from "@/components/install";
 import Link from "next/link";
 import { useMe } from "@/components/providers";
 import { Badge, Button, Card, Confirm, useToast } from "@/components/ui";
@@ -117,7 +116,6 @@ function ProfileInner() {
 
       {tab === "Account" && (
         <div className="space-y-4">
-          <InstallCard />
           <Card className="p-5">
             <div className="flex items-center gap-3">
               <Mail size={18} className="text-ice" />

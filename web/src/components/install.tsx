@@ -1,89 +1,32 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useState } from "react";
-import { ArrowDown, Copy, Download, EllipsisVertical, Share, SquarePlus, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowDown, Copy, Download, EllipsisVertical, Share, SquarePlus } from "lucide-react";
 import { KoldMark } from "./brand";
 import { useMe } from "./providers";
 import { Button, Sheet, useToast } from "./ui";
-import { useInstall, type InstallMode } from "@/lib/install";
-import { play } from "@/lib/sound";
 
-const LATER_KEY = "kold.install.later";
-const LATER_DAYS = 7;
+/**
+ * Installing Kold starts on the landing page (docs/index.html): Android installs there in one tap. iPhone can't
+ * install from a website's button, so the landing page sends people here with ?install=ios and this guide shows
+ * the Share, Add to Home Screen steps on the app's own page (so the icon opens the app, not the landing page).
+ */
+export type InstallMode = "ios" | "android" | "in-app";
 
-function snoozed(): boolean {
-  try {
-    return Date.now() - Number(localStorage.getItem(LATER_KEY) ?? 0) < LATER_DAYS * 86400000;
-  } catch {
-    return false;
-  }
-}
-
-/** Modes where there is something to offer: one-tap install, or steps the user can follow. */
-const OFFERABLE: InstallMode[] = ["prompt", "ios", "android", "in-app"];
-
-/** "Install Kold": installs directly where the browser allows it, otherwise opens the step-by-step guide. */
-export function InstallButton({ label = "Install Kold", className }: { label?: string; className?: string }) {
-  const { mode, install } = useInstall();
-  const toast = useToast();
-  const [guide, setGuide] = useState(false);
-  if (!OFFERABLE.includes(mode)) return null;
-
-  const go = async () => {
-    if (mode !== "prompt") return setGuide(true);
-    if (await install()) {
-      play("success");
-      toast("Kold is installed. Open it from your home screen.", "ok");
-    }
-  };
-
-  return (
-    <>
-      <Button variant="primary" className={className} onClick={go}><Download size={15} /> {label}</Button>
-      <InstallGuide mode={mode} open={guide} onClose={() => setGuide(false)} />
-    </>
-  );
-}
-
-/** A slim bar at the top of the app, on phones (and computers whose browser can install). Dismissible for a week. */
-export function InstallBanner() {
-  const { mode } = useInstall();
-  const [hidden, setHidden] = useState(snoozed);
-  if (hidden || !OFFERABLE.includes(mode)) return null;
-  const later = () => {
-    try {
-      localStorage.setItem(LATER_KEY, String(Date.now()));
-    } catch {}
-    setHidden(true);
-  };
-  return (
-    <div className="flex items-center gap-3 border-b border-line bg-ice/[0.07] px-4 py-2.5">
-      <KoldMark size={26} />
-      <p className="min-w-0 flex-1 text-xs leading-snug text-ink-2">
-        <b className="font-medium text-ink">Get Kold on your home screen.</b> It opens like an app, full screen, with notifications.
-      </p>
-      <InstallButton label="Install" className="!px-3.5 !py-1.5 !text-xs" />
-      <button onClick={later} className="rounded-full p-1.5 text-ink-3 hover:bg-white/5 hover:text-ink" aria-label="Not now"><X size={15} /></button>
-    </div>
-  );
-}
-
-/** For Profile and onboarding: explains why, with the button. Hidden once installed. */
-export function InstallCard({ compact, className = "" }: { compact?: boolean; className?: string }) {
-  const { mode } = useInstall();
-  if (!OFFERABLE.includes(mode)) return null;
-  return (
-    <div className={`flex flex-wrap items-center gap-3 rounded-2xl bg-ice/[0.06] p-4 hairline ${className}`}>
-      <KoldMark size={34} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">Install Kold on this {mode === "prompt" && !/Android|iPhone|iPad/i.test(navigator.userAgent) ? "computer" : "phone"}</p>
-        {!compact && <p className="mt-0.5 text-xs text-ink-3">Opens from your home screen like an app, full screen, and can notify you about replies. No app store, nothing to pay.</p>}
-        {compact && mode === "ios" && <p className="mt-0.5 text-xs text-ink-3">Do this first: on iPhone, the installed app keeps its own data, separate from Safari.</p>}
-      </div>
-      <InstallButton />
-    </div>
-  );
+/** Opens the guide when the app was opened with ?install=…, then tidies the address bar. */
+export function InstallFromLink() {
+  const [mode, setMode] = useState<InstallMode | null>(null);
+  useEffect(() => {
+    const url = new URL(location.href);
+    const m = url.searchParams.get("install");
+    if (m !== "ios" && m !== "android" && m !== "in-app") return;
+    url.searchParams.delete("install");
+    history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+    const t = setTimeout(() => setMode(m), 400); // after the first screen has settled
+    return () => clearTimeout(t);
+  }, []);
+  return <InstallGuide mode={mode ?? "ios"} open={!!mode} onClose={() => setMode(null)} />;
 }
 
 /** Steps for browsers that can't install with one tap. */

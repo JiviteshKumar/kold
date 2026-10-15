@@ -3,13 +3,15 @@ import { writeFileSync } from "node:fs";
 
 const STATIC = process.env.KOLD_STATIC === "1";
 const base = process.env.KOLD_BASE_PATH ?? (STATIC ? "/kold/app" : "");
+// Lite's scope also covers the landing page one level up (/kold/), so phones can install Kold from there.
+const scope = STATIC ? `${base.replace(/\/app$/, "")}/` : `${base}/`;
 const manifest = {
   name: "Kold: cold outreach, warm replies",
   short_name: "Kold",
   description: "Genuine opportunities matched to your resume, and cold outreach you approve email by email.",
   id: `${base}/`,
   start_url: `${base}/`,
-  scope: `${base}/`,
+  scope,
   display: "standalone",
   orientation: "portrait",
   background_color: "#05070d",

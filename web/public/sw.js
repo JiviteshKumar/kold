@@ -11,7 +11,8 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== SHELL).map((k) => caches.delete(k)))).then(() => self.clients.claim()),
+    // Only this worker's old caches: the landing page keeps its own ("kold-home").
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("kold-shell") && k !== SHELL).map((k) => caches.delete(k)))).then(() => self.clients.claim()),
   );
 });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { InstallFromLink } from "./install";
 import { ToastProvider } from "./ui";
 import { api, isLite } from "@/lib/api";
 import type { Me } from "@/lib/types";
@@ -78,7 +79,10 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{ me, loading, refresh }}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        {children}
+        <InstallFromLink />
+      </ToastProvider>
     </Ctx.Provider>
   );
 }
