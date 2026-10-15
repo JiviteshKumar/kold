@@ -174,7 +174,7 @@ def main():
     check("B3c user B cannot swipe user A's card", r.status_code == 404, r.status_code)
 
     r = A.post("/feed/refresh")
-    for _ in range(120):
+    for _ in range(450):  # a full live crawl of 90 official sources takes several minutes
         if not A.get("/feed/refresh").json()["running"]:
             break
         time.sleep(2)
