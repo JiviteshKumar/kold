@@ -1,0 +1,21 @@
+Kabir Singh
+New Delhi | kabir.singh@example.com | 98110 22334 | github.com/kabirsingh
+
+CAREER OBJECTIVE
+Fresher looking for a web development role where I can learn from a strong team.
+
+INTERNSHIPS
+Web Development Intern — Infosys (Jan 2025 - Mar 2025)
+* Built 6 responsive pages for an internal HR portal in React.
+* Fixed 40 accessibility issues flagged by Lighthouse.
+
+ACADEMIC DETAILS
+B.Tech (CSE), Amity University, 2021 - 2025, CGPA 7.8
+Class XII (CBSE), Delhi Public School, 2021, 91%
+Class X (CBSE), Delhi Public School, 2019, 94%
+
+PROJECTS
+Expense Tracker: React Native app that splits shared expenses for hostel roommates.
+
+SKILLS
+HTML, CSS, JavaScript, React, Node.js, MongoDB

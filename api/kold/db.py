@@ -21,8 +21,9 @@ if _sqlite:
 
 
 def init_db() -> None:
-    from . import models  # noqa: F401  (registers tables)
+    from . import models
 
+    assert models.User  # importing the models registers their tables
     SQLModel.metadata.create_all(engine)
     _add_missing_columns()
     _fix_indexes()

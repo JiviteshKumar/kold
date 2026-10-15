@@ -1,9 +1,9 @@
-"""Resume → structured profile.
+"""Resume -> structured profile.
 
-1. Extract text from PDF/DOCX/TXT.
-2. Ask the local model to structure it (if it's running), else use rule-based parsing.
-3. Verify: anything the model returns that does not appear in the resume text is dropped.
-   Kold never invents facts about the user.
+1. Extract text keeping the layout's meaning (PDF in pypdf's layout mode, DOCX with its list bullets, TXT).
+2. Read it with Kold's rules (rules.py, the same rules as Kold Lite) and, if it's running, ask the local model too;
+   the two are merged, keeping the richer answer for each section.
+3. Verify: anything that does not appear in the resume text is dropped. Kold never invents facts about the user.
 """
 import re
 from pathlib import Path
@@ -11,20 +11,9 @@ from pathlib import Path
 from pypdf import PdfReader
 
 from .. import llm
-from .skills import SKILLS
+from . import rules
 
-EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-PHONE = re.compile(r"(?:\+?\d{1,3}[\s-]?)?(?:\(?\d{3,5}\)?[\s-]?)?\d{3,5}[\s-]?\d{4,5}")
-URL = re.compile(r"(?:https?://)?(?:www\.)?(?:linkedin\.com/in/|github\.com/|[\w-]+\.(?:dev|io|me|com|in|app|site)/?)[\w\-./?=#%]*", re.I)
-HEADINGS = {
-    "summary": r"summary|objective|profile|about me",
-    "experience": r"(work |professional )?experience|employment|internships?|work history",
-    "education": r"education|academics?|qualifications?",
-    "skills": r"(technical )?skills|technologies|tech stack|tools",
-    "projects": r"projects?|personal projects|academic projects",
-    "certifications": r"certifications?|courses|licenses",
-    "achievements": r"achievements?|awards|honou?rs|accomplishments|positions of responsibility|extracurricular",
-}
+EMAIL = rules.EMAIL
 
 PROFILE_SCHEMA = {
     "type": "object",
@@ -67,113 +56,55 @@ SYSTEM = (
 )
 
 
+
 def extract_text(path: Path) -> str:
     suffix = path.suffix.lower()
     if suffix == ".pdf":
         reader = PdfReader(str(path))
-        parts = []
+        lines: list[str] = []
+        links: list[str] = []
         for page in reader.pages:
-            parts.append(page.extract_text() or "")
+            lines += rules.layout_lines(page.extract_text(extraction_mode="layout") or "")
             # Hyperlinks (LinkedIn/GitHub icons) often live only in annotations.
             for annot in page.get("/Annots") or []:
                 try:
                     uri = annot.get_object().get("/A", {}).get("/URI")
-                    if uri:
-                        parts.append(str(uri))
+                    if uri and str(uri).lower().startswith("http"):
+                        links.append(re.sub(r"/$", "", re.sub(r"^https?://(www\.)?", "", str(uri))))
                 except Exception:
                     pass
-        text = "\n".join(parts)
+        shown = " ".join(lines).lower()
+        extra = [u for u in dict.fromkeys(links) if u and u.lower() not in shown]
+        # next to the contact details, not at the end where they'd land in the last section
+        text = "\n".join(lines[:1] + extra + lines[1:])
     elif suffix == ".docx":
         from docx import Document
 
         doc = Document(str(path))
-        text = "\n".join(p.text for p in doc.paragraphs)
+        out = []
+        for para in doc.paragraphs:
+            listed = "list" in (para.style.name or "").lower() or para._p.pPr is not None and para._p.pPr.numPr is not None
+            out.append(("• " if listed and para.text.strip() else "") + para.text)
         for t in doc.tables:
             for row in t.rows:
-                text += "\n" + " | ".join(c.text for c in row.cells)
+                out.append(" | ".join(c.text for c in row.cells))
+        text = "\n".join(out)
     else:
-        text = path.read_text(errors="ignore")
-    text = text.replace("•", "\n• ").replace("", "\n• ")
+        text = path.read_text(encoding="utf-8", errors="ignore")
     return re.sub(r"[ \t]+", " ", text).strip()
 
 
+def rule_based(text: str) -> dict:
+    return rules.rule_parse(text)
+
+
 def _norm(s: str) -> str:
-    return re.sub(r"[^a-z0-9+#]", "", s.lower())
+    return rules.norm(s)
 
 
 def _in_text(value: str, norm_text: str) -> bool:
     v = _norm(value)
     return bool(v) and v in norm_text
-
-
-def _split_sections(text: str) -> dict[str, str]:
-    sections: dict[str, list[str]] = {"_top": []}
-    current = "_top"
-    for line in text.splitlines():
-        stripped = line.strip().strip(":").strip()
-        found = None
-        if 2 < len(stripped) < 40:
-            for key, pat in HEADINGS.items():
-                if re.fullmatch(pat, stripped, re.I):
-                    found = key
-                    break
-        if found:
-            current = found
-            sections.setdefault(current, [])
-        else:
-            sections.setdefault(current, []).append(line)
-    return {k: "\n".join(v).strip() for k, v in sections.items()}
-
-
-def _bullets(block: str) -> list[str]:
-    out = []
-    for line in block.splitlines():
-        line = line.strip()
-        if re.match(r"^[•\-\*▪●◦]\s*", line):
-            out.append(re.sub(r"^[•\-\*▪●◦]\s*", "", line))
-        elif out and line and not line[0].isupper() and len(line) > 3:
-            out[-1] += " " + line  # wrapped bullet
-    return [b for b in out if len(b) > 3]
-
-
-def find_skills(text: str) -> list[str]:
-    found = []
-    for skill in SKILLS:
-        esc = re.escape(skill)
-        if re.search(rf"(?<![A-Za-z0-9+#]){esc}(?![A-Za-z0-9+#])", text, re.I if len(skill) > 3 else 0):
-            found.append(skill)
-    return found
-
-
-def rule_based(text: str) -> dict:
-    secs = _split_sections(text)
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
-    name = next((l for l in lines[:5] if not EMAIL.search(l) and not re.search(r"\d{4}", l) and len(l.split()) <= 5), "")
-    email = (EMAIL.search(text) or [""])[0] if EMAIL.search(text) else ""
-    phone_m = PHONE.search(secs.get("_top", text))
-    skill_block = secs.get("skills", "")
-    listed = [s.strip(" •-*:") for s in re.split(r"[,|•\n;]", skill_block) if 1 < len(s.strip(" •-*:")) <= 30]
-    listed = [re.sub(r"^[\w ]+:\s*", "", s) for s in listed]
-    skills = list(dict.fromkeys(listed + find_skills(skill_block) + find_skills(text)))
-    edu_text = secs.get("education", "")
-    return {
-        "name": name,
-        "headline": "",
-        "email": email,
-        "phone": phone_m.group(0).strip() if phone_m else "",
-        "location": "",
-        "links": list(dict.fromkeys(m.group(0) for m in URL.finditer(EMAIL.sub(" ", text))))[:6],
-        "summary": secs.get("summary", "")[:600],
-        "skills": skills[:40],
-        "_listed_skills": list(dict.fromkeys(listed + find_skills(skill_block))),
-        "experience": [{"title": "", "company": "", "location": "", "start": "", "end": "", "bullets": _bullets(secs.get("experience", ""))}] if secs.get("experience") else [],
-        "education": [{"degree": edu_text.splitlines()[0] if edu_text else "", "institution": "", "start": "", "end": "", "score": ""}] if edu_text else [],
-        "projects": [{"name": "", "description": b, "tech": [], "link": ""} for b in _bullets(secs.get("projects", ""))][:6],
-        "certifications": _bullets(secs.get("certifications", "")) or [l for l in secs.get("certifications", "").splitlines() if l.strip()][:8],
-        "achievements": _bullets(secs.get("achievements", ""))[:8],
-        "experience_level": "student" if re.search(r"\b(20[2-3]\d)\b.*(expected|present|pursuing)|pursuing|currently studying", text, re.I) else "fresher",
-        "suggested_roles": [],
-    }
 
 
 def verify(data: dict, text: str) -> dict:
@@ -182,7 +113,7 @@ def verify(data: dict, text: str) -> dict:
     # The name must be written as words in the resume, not reconstructed from an email or LinkedIn handle.
     name = (data.get("name") or "").strip()
     if not name or not re.search(rf"(?<![\w.@/-]){re.escape(name)}(?![\w.@/-])", text, re.I):
-        data["name"] = rule_based(text)["name"]
+        data["name"] = rules.rule_parse(text)["name"]
         if data.get("headline", "").strip().lower() == data["name"].lower():
             data["headline"] = ""
     data["skills"] = [s for s in dict.fromkeys(data.get("skills") or []) if _in_text(s, nt)]
@@ -192,7 +123,6 @@ def verify(data: dict, text: str) -> dict:
                      and not any(l in e for e in emails)]
     if not data.get("email") or not _in_text(data["email"], nt):
         data["email"] = emails[0] if emails else ""
-    data.pop("_listed_skills", None)
     data["experience"] = [e for e in data.get("experience") or [] if not e.get("company") or _in_text(e["company"], nt)]
     for e in data["experience"]:
         e.setdefault("location", "")
@@ -206,16 +136,20 @@ def verify(data: dict, text: str) -> dict:
 
 def parse(text: str) -> tuple[dict, str]:
     """Returns (profile_data, method) where method is 'local-model:<name>' or 'rules'."""
-    base = rule_based(text)
+    base = verify(rules.rule_parse(text), text)
     try:
         data = llm.generate_json(SYSTEM, f"Resume text:\n\n{text[:12000]}", PROFILE_SCHEMA)
-        data = verify(data, text)
-        # The model can miss skills in dense lists; add any it skipped from the resume's own skills section.
-        data["skills"] = list(dict.fromkeys((data.get("skills") or []) + base["_listed_skills"]))[:50]
-        if not data.get("phone"):
-            data["phone"] = base["phone"]
-        if not data.get("links"):
-            data["links"] = base["links"]
-        return data, llm.model_label()
     except llm.LLMUnavailable:
-        return verify(base, text), "rules"
+        return base, "rules"
+    data = verify(data, text)
+    # Keep the richer answer for each section, and every skill the resume lists.
+    data["skills"] = list(dict.fromkeys((data.get("skills") or []) + base["skills"]))[:60]
+    for key in ("experience", "education", "projects"):
+        if len(data.get(key) or []) < len(base[key]):
+            data[key] = base[key]
+    for key in ("phone", "links", "headline", "summary", "location"):
+        if not data.get(key):
+            data[key] = base[key]
+    if not data.get("suggested_roles"):
+        data["suggested_roles"] = base["suggested_roles"]
+    return data, llm.model_label()

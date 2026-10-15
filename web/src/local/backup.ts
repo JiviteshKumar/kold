@@ -37,5 +37,5 @@ export async function importBackup(file: File): Promise<void> {
     for (const row of (data.stores?.[s] ?? []) as { id: number }[]) await put(s, row);
   }
   // Saved listings: add the ones this device doesn't have; never replace a fresher copy from the feed.
-  for (const job of (data.jobs ?? []) as { id: string }[]) if (job?.id && !(await d.get("jobs", job.id))) await d.put("jobs", job);
+  for (const job of (data.jobs ?? []) as { id: string }[]) if (job?.id && !(await d.get("jobs", job.id))) await d.put("jobs", job, job.id); // listings are keyed by their feed id
 }

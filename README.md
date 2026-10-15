@@ -61,7 +61,11 @@ npm install
 npm run dev                     # http://localhost:3000
 ```
 
-The first scan takes about a minute (60+ sources). Tests: `cd api && .venv/Scripts/python -m pytest`.
+The first scan takes about a minute (60+ sources).
+
+**Tests** (both run on every push, see `.github/workflows/tests.yml`):
+- Server: `cd api && .venv/Scripts/python -m pytest` (and `python -m tests.e2e_live` against a running sandbox server)
+- Kold Lite's on-device engine: `cd web && npm test`: the resume reader on six real-world layouts (`web/test/fixtures/make_resumes.py` builds them; every person is invented), matching, the writer, reply reading, and the whole flow from resume to replies, follow-ups and backup
 
 ## Sandbox mode (try everything without real email)
 
