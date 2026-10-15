@@ -17,10 +17,19 @@
 </head>
 <body>
   <main>
-    <img src="icons/icon-192.png" width="72" height="72" alt="">
+    <img id="icon" width="72" height="72" alt="" hidden>
     <h1>You're offline</h1>
     <p>Kold needs a connection to refresh listings and send email. Everything you saved is safe.</p>
     <button onclick="location.reload()">Try again</button>
   </main>
+  <script>
+    // This page is shown in place of any page in the app, so the icon is resolved from the app's root, not this URL.
+    navigator.serviceWorker?.getRegistration().then((r) => {
+      if (!r) return;
+      const img = document.getElementById("icon");
+      img.onload = () => (img.hidden = false);
+      img.src = new URL("icons/icon-192.png", r.scope).href;
+    });
+  </script>
 </body>
 </html>

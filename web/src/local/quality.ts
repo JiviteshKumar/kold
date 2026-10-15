@@ -30,10 +30,13 @@ export function unsupportedClaims(body: string, support: string): string[] {
   return out;
 }
 
+// Numbers in Kold's own wording (not claims about the user), e.g. "a 10-minute call".
+const OWN_WORDING = /\b10-minute\b/g;
+
 /** Every number in an email must come from the resume or the posting: no invented metrics. */
 export function grounded(text: string, support: string): boolean {
   const allowed = new Set(support.match(/\d+/g) ?? []);
-  return [...(text.match(/\d+/g) ?? [])].every((n) => allowed.has(n));
+  return [...(text.replace(OWN_WORDING, "").match(/\d+/g) ?? [])].every((n) => allowed.has(n));
 }
 
 export function check(subject: string, body: string, company: string, step: number, hasAttachment: boolean, support = ""): Quality {

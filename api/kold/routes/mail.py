@@ -14,6 +14,7 @@ from ..serialize import outbox as ser_outbox
 from ..services import geo, gmail, notify, outreach, quality, writer
 
 router = APIRouter(prefix="/api")
+REPLACED = "Replaced by a new draft"
 
 
 def _ctx(session: Session, campaign_id: int) -> tuple[Campaign, UserJob, Job]:
@@ -36,6 +37,8 @@ def today(user: User = Depends(current_user), session: Session = Depends(get_ses
         OutboxEmail.status.in_(["pending", "scheduled", "failed"])) | (OutboxEmail.queue_date == day)).order_by(OutboxEmail.id)).all()
     out = []
     for ob in rows:
+        if ob.error == REPLACED:  # a draft replaced by "Rewrite" isn't something the user did today
+            continue
         camp, uj, job = _ctx(session, ob.campaign_id)
         if ob.status in outreach.SENDABLE:
             # Recompute "best time" now, not when the draft was written (it goes stale within hours).
@@ -122,7 +125,7 @@ def regenerate(oid: int, user: User = Depends(current_user), session: Session = 
     camp, _, job = _ctx(session, ob.campaign_id)
     if camp.status != "active":
         raise HTTPException(409, "This outreach is paused or stopped.")
-    ob.status, ob.error = "skipped", "Replaced by a new draft"
+    ob.status, ob.error = "skipped", REPLACED
     session.add(ob)
     session.commit()
     new = outreach.draft_step(session, user, camp)

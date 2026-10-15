@@ -28,8 +28,8 @@ const VERBS = new Set(("built led created designed developed implemented automat
   "coordinated mentored taught presented integrated scaled maintained refactored modeled modelled cleaned visualized visualised " +
   "conducted drove grew saved cut raised published contributed collaborated owned established initiated streamlined").split(" "));
 
-export function supportText(profile: Profile, job: Pick<FeedJob, "title" | "company" | "department" | "location">): string {
-  return `${JSON.stringify(profile)} ${job.title} ${job.department} ${job.company} ${job.location}`;
+export function supportText(profile: Profile, job: Pick<FeedJob, "title" | "company" | "department" | "location"> & { description?: string }): string {
+  return `${JSON.stringify(profile)} ${job.title} ${job.department} ${job.company} ${job.location} ${job.description ?? ""}`;
 }
 
 /** "Software Engineer - Cloud: Azure (L3) | Bangalore" → "Software Engineer, Cloud: Azure" style short role. */
@@ -46,8 +46,11 @@ function firstName(email: string, role: string): string {
   return m ? capitalize(m[1].toLowerCase()) : "";
 }
 
+// A resume line cut off mid-word ("...(AUC 0.86); se") ends in a stub; quote the complete part only.
+const dropStub = (t: string) => t.trim().replace(/[;,]\s*[a-z]{1,3}$/, "");
+
 function asSentence(raw: string): string {
-  let s = raw.trim().replace(/[.;]+$/, "");
+  let s = dropStub(raw).replace(/[.;]+$/, "");
   const first = (s.split(/\s/)[0] ?? "").toLowerCase();
   if (VERBS.has(first) || /ed$/.test(first)) s = `I ${first}${s.slice(first.length)}`;
   else s = `I worked on ${s[0].toLowerCase()}${s.slice(1)}`;
@@ -75,7 +78,7 @@ function proofSentence(f: Fact, first: boolean): string {
   if (f.kind === "exp") return first && f.context ? `At ${f.context}, ${asSentence(f.text).replace(/^I /, "I ")}` : asSentence(f.text);
   if (f.kind === "project") {
     const s = asSentence(f.text);
-    return /^I worked on/.test(s) ? `I also built ${f.context}: ${f.text.replace(/[.;]+$/, "")}.` : `For ${f.context}, ${s}`;
+    return /^I worked on/.test(s) ? `I also built ${f.context}: ${dropStub(f.text).replace(/[.;]+$/, "")}.` : `For ${f.context}, ${s}`;
   }
   return `I was ${f.text.replace(/[.;]+$/, "").replace(/^[A-Z]/, (c) => c.toLowerCase())}.`.replace(/^I was (winner|finalist|runner)/i, "I was a $1");
 }
@@ -256,7 +259,7 @@ export async function replyDraft(profile: Profile, job: FeedJob, theirName: stri
   const hi = /^[A-Z][a-z]+$/.test(theirName.split(" ")[0] ?? "") ? `Hi ${theirName.split(" ")[0]},` : "Hi,";
   const me = profile.name;
   const base: Record<string, string> = {
-    positive: `${hi}\n\nThank you for getting back to me. I'd be glad to talk about the ${shortRole(job.title)} role. I'm available [your availability, e.g. Tue–Thu after 2 PM IST]. Please let me know what works for you.\n\nBest,\n${me}`,
+    positive: `${hi}\n\nThank you for getting back to me. I'd be glad to talk about the ${shortRole(job.title)} role. I'm available [your availability, e.g. Tue–Thu after 2 PM IST]. Would one of those times work for you?\n\nBest,\n${me}`,
     question: `${hi}\n\nThank you for your reply. [answer their question here]\n\nHappy to share anything else that helps.\n\nBest,\n${me}`,
     not_now: `${hi}\n\nThank you for letting me know. I'd love to be considered when a suitable role opens up. Would it be all right if I checked back in a few months?\n\nBest,\n${me}`,
     negative: `${hi}\n\nThank you for the update and for taking the time to reply. I wish you and the team all the best.\n\nBest,\n${me}`,

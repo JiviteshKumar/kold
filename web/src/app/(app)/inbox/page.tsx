@@ -4,9 +4,10 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { Bot, Check, ExternalLink, FileText, Inbox as InboxIcon, Mail, PenLine, Play, RefreshCw, Send, Sparkles, Square, UserRound } from "lucide-react";
+import { Bot, Check, ExternalLink, FastForward, FileText, FlaskConical, Inbox as InboxIcon, Mail, PenLine, Play, RefreshCw, Send, Sparkles, Square, UserRound } from "lucide-react";
 import clsx from "clsx";
 import { CompanyMark } from "@/components/job-bits";
+import { useMe } from "@/components/providers";
 import { Badge, Button, Confirm, Empty, inputCls, Sheet, useToast } from "@/components/ui";
 import { api } from "@/lib/api";
 import { ago, dateShort, dateTime, LABEL_META } from "@/lib/format";
@@ -181,7 +182,10 @@ function ConversationView({ c, onChanged }: { c: Conversation; onChanged: () => 
   const toast = useToast();
   const received = c.messages.filter((m): m is Extract<ConvMessage, { kind: "received" }> => m.kind === "received");
   const focus = [...received].reverse().find((m) => !m.handled) ?? received[received.length - 1];
-  const [selected, setSelected] = useState<number | null>(focus?.id ?? null);
+  // The newest reply that still needs you is open by default, including one that arrives while you're looking.
+  const [picked, setSelected] = useState<number | null>(null);
+  const newer = focus && !focus.handled && (picked === null || focus.id > picked);
+  const selected = newer ? focus.id : picked ?? focus?.id ?? null;
   const st = statusOf(c);
   const [stopAsk, setStopAsk] = useState(false);
 
@@ -254,13 +258,69 @@ function ConversationView({ c, onChanged }: { c: Conversation; onChanged: () => 
         </p>
       )}
 
+      <DemoPanel c={c} onChanged={onChanged} />
+
       <Confirm open={stopAsk} onClose={() => setStopAsk(false)} title="Stop emailing this company?" body="No more emails will be drafted. Kold still shows any reply they send." confirmLabel="Stop outreach" tone="danger" onConfirm={() => decide("stop")} />
+    </div>
+  );
+}
+
+const DEMO_KINDS = [
+  { id: "interested", label: "Interested" },
+  { id: "question", label: "Asks a question" },
+  { id: "not_now", label: "Not right now" },
+  { id: "out_of_office", label: "Out of office" },
+  { id: "declined", label: "Declined" },
+  { id: "annoyed", label: "Annoyed" },
+];
+
+/** Demo mailbox only: play the company's side so the reply flow can be tried without real email. */
+function DemoPanel({ c, onChanged }: { c: Conversation; onChanged: () => Promise<void> }) {
+  const { me } = useMe();
+  const toast = useToast();
+  const [busy, setBusy] = useState("");
+  if (!me?.lite || !me.gmail?.demo || !c.steps_sent) return null;
+
+  const run = async (key: string, path: string, body: object, done: (r: { new?: number; drafted?: number }) => string) => {
+    setBusy(key);
+    try {
+      const r = await api.post<{ new?: number; drafted?: number }>(path, { campaign_id: c.campaign_id, ...body });
+      toast(done(r), "ok");
+      await onChanged();
+      window.dispatchEvent(new Event("kold:refresh-stats"));
+    } catch (e) {
+      toast((e as Error).message, "bad");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-dashed border-warn/40 bg-warn/[0.04] p-4">
+      <p className="flex items-center gap-2 text-sm font-medium text-warn"><FlaskConical size={15} /> Demo mailbox: play the company</p>
+      <p className="mt-1 text-xs text-ink-3">Pick how {c.company} answers. The reply lands in the demo mailbox and Kold reads, labels and handles it just as it would in Gmail.</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {DEMO_KINDS.map((k) => (
+          <Button key={k.id} variant="outline" className="!px-3 !py-1.5 !text-xs" loading={busy === k.id} disabled={!!busy}
+            onClick={() => run(k.id, "/demo/reply", { kind: k.id }, (r) => (r.new ? "Reply received and labelled" : "Reply received"))}>
+            {k.label}
+          </Button>
+        ))}
+        {c.status === "active" && c.next_due && (
+          <Button variant="ghost" className="!px-3 !py-1.5 !text-xs" loading={busy === "advance"} disabled={!!busy}
+            onClick={() => run("advance", "/demo/advance", {}, (r) => (r.drafted ? "Follow-up drafted. Review it in Today." : "Nothing new to draft"))}>
+            <FastForward size={12} /> Skip ahead to the next follow-up
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
 
 function ReplyActions({ msg, onChanged }: { msg: Reply; onChanged: () => Promise<void> }) {
   const toast = useToast();
+  const { me } = useMe();
+  const demoBox = !!me?.lite && !!me.gmail?.demo; // no real Gmail to open
   const [draft, setDraft] = useState(msg.suggested_reply);
   const [quality, setQuality] = useState<Quality | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -276,7 +336,7 @@ function ReplyActions({ msg, onChanged }: { msg: Reply; onChanged: () => Promise
         setDraft(r.suggested_reply);
         setQuality(r.quality);
         play("success");
-      } else {
+      } else if (!demoBox) {
         window.open(msg.thread_url, "_blank");
       }
       await onChanged();
@@ -346,7 +406,7 @@ function ReplyActions({ msg, onChanged }: { msg: Reply; onChanged: () => Promise
 
       {canReply && !msg.handled && !draft && (
         <div className="grid gap-3 sm:grid-cols-2">
-          <ChoiceCard icon={<UserRound size={20} />} title="I'll reply myself" body="Opens this email in Gmail. Kold notices when you've replied." onClick={() => mode("self")} loading={busy === "self"} />
+          <ChoiceCard icon={<UserRound size={20} />} title="I'll reply myself" body={demoBox ? "In Gmail this opens the email so you can answer it yourself. Kold notices when you've replied." : "Opens this email in Gmail. Kold notices when you've replied."} onClick={() => mode("self")} loading={busy === "self"} />
           <ChoiceCard warm icon={<Bot size={20} />} title="Draft a reply for me" body="Kold writes a reply from your profile. You edit it and decide whether to send." onClick={() => mode("assisted")} loading={busy === "assisted"} />
         </div>
       )}
@@ -380,7 +440,7 @@ function ReplyActions({ msg, onChanged }: { msg: Reply; onChanged: () => Promise
             <Check size={15} /> {msg.reply_mode === "self" ? "I've replied" : "Mark as handled"}
           </Button>
         )}
-        <a href={msg.thread_url} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs text-ink-3 hover:text-ink">Open in Gmail <ExternalLink size={11} /></a>
+        {!demoBox && <a href={msg.thread_url} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs text-ink-3 hover:text-ink">Open in Gmail <ExternalLink size={11} /></a>}
       </div>
 
       <details className="rounded-xl bg-white/[0.02] hairline">

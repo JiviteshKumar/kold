@@ -471,7 +471,9 @@ on("PATCH", "/reminders/:id", async (m, body) => {
 
 on("GET", "/today", async () => {
   const day = todayLocal();
-  const rows = (await where<O.Ob>("outbox", (o) => ["pending", "failed", "sending"].includes(o.status) || o.queue_date === day)).sort((a, b) => a.id - b.id);
+  // A draft replaced by "Rewrite" isn't something the user did today, so it isn't listed.
+  const rows = (await where<O.Ob>("outbox", (o) => ["pending", "failed", "sending"].includes(o.status) || (o.queue_date === day && o.error !== REPLACED)))
+    .sort((a, b) => a.id - b.id);
   const emails = [];
   for (const o of rows) {
     const camp = await get<O.Camp>("campaigns", o.campaign_id);
@@ -535,10 +537,12 @@ on("POST", "/outbox/:id/regenerate", async (m) => {
   if (!["pending", "failed"].includes(o!.status)) fail(409, "This email is no longer waiting to be sent");
   const camp = (await get<O.Camp>("campaigns", o!.campaign_id))!;
   if (camp.status !== "active") fail(409, "This outreach is paused or stopped.");
-  await put("outbox", { ...o!, status: "skipped", error: "Replaced by a new draft" });
+  await put("outbox", { ...o!, status: "skipped", error: REPLACED });
   const n = await O.draftStep(camp);
   return { id: n?.id ?? null };
 });
+
+const REPLACED = "Replaced by a new draft";
 
 async function conversation(camp: O.Camp) {
   const sent = await where<O.Ob>("outbox", (o) => o.campaign_id === camp.id && o.status === "sent");
@@ -578,6 +582,51 @@ on("GET", "/inbox", async () => {
     msgs.push(serInbox(x, job, camp));
   }
   return { messages: msgs, gmail_connected: !!(await gmail.connection()) };
+});
+
+// ---------------------------------------------------------------------------------------------- demo mailbox only
+// Lets someone trying Kold see the reply side: the "company" answers in the demo mailbox, and Kold then reads,
+// labels and helps with it exactly as it would with real Gmail. Refused for a real mailbox.
+const DEMO_REPLIES: Record<string, (me: string, them: string, co: string, role: string) => { subject?: string; body: string; headers?: Record<string, string> }> = {
+  interested: (me, them, co, role) => ({ body: `Hi ${me},\n\nThanks for reaching out. Your background looks like a good fit for the ${role} role. Are you free for a short call on Thursday or Friday afternoon? Please share a couple of times that work for you.\n\nBest,\n${them}\n${co} Talent Team` }),
+  question: (me, them) => ({ body: `Hi ${me},\n\nThanks for your email. Before we move ahead, could you share your expected compensation and your earliest joining date?\n\nRegards,\n${them}` }),
+  not_now: (me, them) => ({ body: `Hi ${me},\n\nThanks for your interest. We have paused hiring for this role for now, but we expect to reopen it next quarter. Feel free to reach out again then.\n\nBest,\n${them}` }),
+  out_of_office: (_me, them) => {
+    const back = new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    return { subject: "Automatic reply: Out of office", headers: { "auto-submitted": "auto-replied" },
+      body: `Hello,\n\nI am out of the office until ${back} with limited access to email. I will respond when I am back.\n\nThanks,\n${them}` };
+  },
+  declined: (me, them) => ({ body: `Hi ${me},\n\nThank you for reaching out. We have decided to move forward with other candidates for this role. We wish you the best in your search.\n\nRegards,\n${them}` }),
+  annoyed: () => ({ body: "Please stop emailing me. I'm not the right person for this and I didn't ask to be contacted." }),
+};
+
+async function demoCampaign(body: unknown): Promise<O.Camp> {
+  if ((await gmail.connection())?.mode !== "demo") fail(403, "Only available with the demo mailbox.");
+  const camp = await get<O.Camp>("campaigns", Number((body as { campaign_id?: unknown }).campaign_id));
+  if (!camp) fail(404, "Not found");
+  return camp!;
+}
+
+on("POST", "/demo/reply", async (_m, body) => {
+  const camp = await demoCampaign(body);
+  if (!camp.thread_id) fail(400, "Send the first email before simulating a reply");
+  const make = DEMO_REPLIES[String((body as { kind?: string }).kind)] ?? fail(400, "Unknown reply type");
+  const uj = await get<O.UJ>("userjobs", camp.user_job_id);
+  const job = uj && (await getJob(uj.job_id));
+  const local = camp.to_email.split("@")[0].split(/[._-]/)[0];
+  const them = /^(careers|jobs|hiring|hr|talent|recruiting|info|hello|contact)$/i.test(local) ? "Hiring Team" : local[0].toUpperCase() + local.slice(1).toLowerCase();
+  const me = ((await O.profile()).name || "there").split(/\s+/)[0];
+  const r = make(me, them, job?.company ?? "", job ? shortRole(job.title) : "this");
+  await gmail.demoReply(camp.thread_id, camp.to_email, them === "Hiring Team" ? `${job?.company ?? ""} Hiring Team`.trim() : them,
+    r.subject ?? `Re: ${camp.first_subject}`, r.body, { headers: r.headers });
+  return { new: await O.checkReplies() };
+});
+
+on("POST", "/demo/advance", async (_m, body) => {
+  const camp = await demoCampaign(body);
+  if (camp.status !== "active" || !camp.next_due) fail(409, "No follow-up is waiting for this outreach.");
+  await put("campaigns", { ...camp, next_due: todayLocal() });
+  return { drafted: await O.buildDailyQueue() };
 });
 
 on("POST", "/inbox/check", async () => {

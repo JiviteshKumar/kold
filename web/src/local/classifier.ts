@@ -13,9 +13,10 @@ export const LABELS = ["positive", "question", "not_now", "negative", "annoyed",
 
 const PHRASES: [string, number, RegExp][] = [
   ["annoyed", 0.95, /stop (e-?mailing|contacting|sending)|remove me|unsubscribe|do not (contact|email)|don'?t (contact|email) me|this is spam|reported as spam|harass|leave me alone|please stop|how did you get (my|this) (e-?mail|address)/i],
-  ["negative", 0.85, /not (currently )?hiring|no (open )?(positions|openings|vacancies)|position (has been|is) (filled|closed)|(won'?t|will not|not) be (moving|proceeding) forward|decided to (move forward|proceed) with other|not a (good )?(fit|match)|unable to (offer|consider)|regret to inform|we'?ll pass|unfortunately/i],
+  ["negative", 0.85, /not (currently )?hiring|no (open )?(positions|openings|vacancies)|position (has been|is) (filled|closed)|(won'?t|will not|not) be (moving|proceeding) forward|decided to (move forward|proceed) with other|not a (good )?(fit|match)|unable to (offer|consider)|regret to inform|we'?ll pass|unfortunately|(moving|move|proceed|proceeding|go|going) (forward|ahead) with (other|another) (candidates?|applicants?)|(wish|wishing) you (all )?the (very )?best (of luck )?(in|with) your (job )?search/i],
   ["not_now", 0.8, /keep (your )?(resume|cv|profile) on file|future (openings|opportunities|roles)|check back|reach out (again )?in (a few|\d+) (weeks|months)|not (right )?now|later this year|next quarter/i],
-  ["positive", 0.85, /\b(schedule|set up|book) (a )?(call|time|chat|meeting|interview)|calendly\.com|cal\.com|(are|would) you (be )?(available|free)|let'?s (talk|chat|connect)|next steps?|(happy|glad|love) to (chat|talk|connect|speak)|move (you )?forward|shortlisted|interview|forward(ed)? your (profile|resume|cv)|send (over )?(a )?(take[- ]home|assignment)/i],
+  ["question", 0.8, /(could|can|would) you (please )?(share|send|tell|confirm|let (me|us) know)|what (is|are|would be) your|expected (ctc|salary|compensation|stipend|pay)|current (ctc|salary)|notice period|(earliest|possible) (joining|start) date|when (can|could) you (start|join)|are you (open|willing|comfortable) (to|with)|(do|did) you have (any )?experience/i],
+  ["positive", 0.85, /\b(schedule|set up|book) (a )?(call|time|chat|meeting|interview)|calendly\.com|cal\.com|(are|would) you (be )?(available|free)|let'?s (talk|chat|connect)|next steps?|(happy|glad|love) to (chat|talk|connect|speak)|move (you )?forward(?! with other)|shortlisted|interview|forward(ed)? your (profile|resume|cv)|send (over )?(a )?(take[- ]home|assignment)/i],
 ];
 const OOO = /out of (the )?office|\booo\b|on (annual |parental |sick )?leave|on vacation|limited access to (my )?e-?mail|away (from|until)|currently (travelling|traveling)/i;
 const AUTO = /automatic reply|auto-?reply|autoresponder|this is an automated|we (have )?received your (e-?mail|application|message)|do not reply to this/i;
@@ -26,15 +27,35 @@ function autoHeader(h: Record<string, string>): boolean {
   return (h["auto-submitted"] ?? "no").toLowerCase() !== "no" && (h["auto-submitted"] ?? "") !== "" || "x-autoreply" in h || "x-autorespond" in h || (h["precedence"] ?? "").toLowerCase() === "auto_reply";
 }
 
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const MON = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+const DAY_MONTH = new RegExp(`(?:(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?${MON}\\b|${MON}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b)(?:,?\\s+(\\d{4}))?`, "i");
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** "back on 20 December", "out until October 22, 2026", "returning Monday" → local YYYY-MM-DD (within 120 days). */
 export function returnDate(text: string): string | null {
-  const re = /(back|return(?:ing)?|in the office|available)\s+(?:on|from|after|by)?\s*(?:[A-Z][a-z]+,?\s+)?([^.\n]{3,30})/gi;
-  const now = new Date();
-  for (const m of text.matchAll(re)) {
-    const d = new Date(`${m[2].replace(/(\d+)(st|nd|rd|th)/, "$1")} ${now.getFullYear()}`);
-    if (isNaN(d.getTime())) continue;
-    if (d < now && d.getMonth() < now.getMonth()) d.setFullYear(now.getFullYear() + 1);
-    const days = (d.getTime() - now.getTime()) / 86400000;
-    if (days >= -1 && days <= 120) return d.toISOString().slice(0, 10);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (const m of text.matchAll(/\b(back|return(?:ing)?|in the office|available|until|till|through)\b([^\n]{0,40})/gi)) {
+    const near = m[2];
+    let d: Date | null = null;
+    const dm = near.match(DAY_MONTH);
+    if (dm) {
+      const day = Number(dm[1] ?? dm[4]);
+      const mon = MONTHS.indexOf((dm[2] ?? dm[3]).slice(0, 3).toLowerCase());
+      d = new Date(dm[5] ? Number(dm[5]) : today.getFullYear(), mon, day);
+      if (!dm[5] && d < today) d.setFullYear(d.getFullYear() + 1); // "back on 3 January", written in December
+    } else {
+      const wd = near.match(/^\s*(?:on\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
+      if (wd) {
+        d = new Date(today);
+        d.setDate(d.getDate() + (((WEEKDAYS.indexOf(wd[1].toLowerCase()) - d.getDay() + 7) % 7) || 7));
+      }
+    }
+    if (!d || isNaN(d.getTime())) continue;
+    const days = (d.getTime() - today.getTime()) / 86400000;
+    if (days >= 0 && days <= 120) return ymd(d);
   }
   return null;
 }
@@ -47,7 +68,8 @@ function rules(h: Record<string, string>, from: string, subject: string, body: s
     const m = text.match(re);
     if (m) hits.set(label, [conf, m[0]]);
   }
-  const humanPositive = hits.has("positive");
+  if (hits.has("question") && !body.includes("?")) hits.delete("question");
+  const humanPositive = hits.has("positive") || hits.has("question");
   const auto = autoHeader(h);
   const ooo = text.match(OOO);
   if (ooo && (auto || AUTO.test(subject) || /out of (the )?office/i.test(subject) || !humanPositive)) return ["out_of_office", auto ? 0.95 : 0.85, `Says “${ooo[0]}”`];
@@ -55,6 +77,7 @@ function rules(h: Record<string, string>, from: string, subject: string, body: s
   if (hits.has("annoyed")) return ["annoyed", hits.get("annoyed")![0], `Contains “${hits.get("annoyed")![1].slice(0, 60)}”`];
   const human = [...hits.entries()].filter(([k]) => ["negative", "not_now", "positive"].includes(k));
   if (human.length === 1) return [human[0][0], human[0][1][0], `Contains “${human[0][1][1].slice(0, 60)}”`];
+  if (!human.length && hits.has("question")) return ["question", hits.get("question")![0], `Asks “${hits.get("question")![1].slice(0, 60)}”`];
   return null;
 }
 

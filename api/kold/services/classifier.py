@@ -23,25 +23,32 @@ PHRASES = [
                       r"this is spam|reported as spam|harass|leave me alone|please stop|how did you get (my|this) (e-?mail|address)"),
     ("negative", 0.85, r"not (currently )?hiring|no (open )?(positions|openings|vacancies)|position (has been|is) (filled|closed)|"
                        r"(won'?t|will not|not) be (moving|proceeding) forward|decided to (move forward|proceed) with other|"
-                       r"not a (good )?(fit|match)|unable to (offer|consider)|regret to inform|we'?ll pass|unfortunately"),
+                       r"not a (good )?(fit|match)|unable to (offer|consider)|regret to inform|we'?ll pass|unfortunately|"
+                       r"(moving|move|proceed|proceeding|go|going) (forward|ahead) with (other|another) (candidates?|applicants?)|"
+                       r"(wish|wishing) you (all )?the (very )?best (of luck )?(in|with) your (job )?search"),
     ("not_now", 0.8, r"keep (your )?(resume|cv|profile) on file|future (openings|opportunities|roles)|check back|"
                      r"reach out (again )?in (a few|\d+) (weeks|months)|not (right )?now|later this year|next quarter"),
+    ("question", 0.8, r"(could|can|would) you (please )?(share|send|tell|confirm|let (me|us) know)|what (is|are|would be) your|"
+                       r"expected (ctc|salary|compensation|stipend|pay)|current (ctc|salary)|notice period|"
+                       r"(earliest|possible) (joining|start) date|when (can|could) you (start|join)|"
+                       r"are you (open|willing|comfortable) (to|with)|(do|did) you have (any )?experience"),
     ("positive", 0.85, r"\b(schedule|set up|book) (a )?(call|time|chat|meeting|interview)|calendly\.com|cal\.com|"
                        r"(are|would) you (be )?(available|free)|let'?s (talk|chat|connect)|next steps?|"
-                       r"(happy|glad|love) to (chat|talk|connect|speak)|move (you )?forward|shortlisted|"
+                       r"(happy|glad|love) to (chat|talk|connect|speak)|move (you )?forward(?! with other)|shortlisted|"
                        r"interview|forward(ed)? your (profile|resume|cv)|send (over )?(a )?(take[- ]home|assignment)"),
 ]
 OOO = re.compile(r"out of (the )?office|\booo\b|on (annual |parental |sick )?leave|on vacation|limited access to (my )?e-?mail|"
                  r"away (from|until)|currently (travelling|traveling)", re.I)
 AUTO = re.compile(r"automatic reply|auto-?reply|autoresponder|this is an automated|we (have )?received your (e-?mail|application|message)|"
                   r"do not reply to this", re.I)
-RETURN = re.compile(r"(back|return(ing)?|in the office|available)\s+(on|from|after|by)?\s*([A-Z][a-z]+,?\s+)?([^.\n]{3,30})", re.I)
+RETURN = re.compile(r"(back|return(ing)?|in the office|available|until|till|through)\s+(on|from|after|by)?\s*"
+                    r"((mon|tues|wednes|thurs|fri|satur|sun)day,?\s+)?([^.\n]{3,30})", re.I)
 
 
 def return_date(text: str) -> date | None:
     for m in RETURN.finditer(text):
         try:
-            d = dateparser.parse(m.group(5), fuzzy=True, default=datetime.now().replace(day=1)).date()
+            d = dateparser.parse(m.group(6), fuzzy=True, default=datetime.now().replace(day=1)).date()
         except (ValueError, OverflowError):
             continue
         today = date.today()
@@ -74,6 +81,8 @@ def _rules(headers: dict, from_email: str, subject: str, body: str) -> tuple[str
     auto_hdr = _auto_header(headers)
     text = f"{subject}\n{body[:3000]}"
     hits = _phrase_hits(text)
+    if "question" in hits and "?" not in body:
+        del hits["question"]
     human_positive = "positive" in hits or "question" in hits
     ooo = OOO.search(text)
     if ooo and (auto_hdr or AUTO.search(subject) or re.search(r"out of (the )?office", subject, re.I) or not human_positive):
@@ -86,6 +95,8 @@ def _rules(headers: dict, from_email: str, subject: str, body: str) -> tuple[str
     if len(human) == 1:
         label, (conf, phrase) = next(iter(human.items()))
         return label, conf, f"Contains “{phrase[:60]}”"
+    if not human and "question" in hits:  # they asked something and gave no other signal
+        return "question", hits["question"][0], f"Asks “{hits['question'][1][:60]}”"
     return None  # nothing clear, or mixed signals (e.g. "unfortunately I'm out Monday, but let's talk Thursday")
 
 

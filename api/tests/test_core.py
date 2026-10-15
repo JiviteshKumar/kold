@@ -93,3 +93,21 @@ def test_geo_eligibility_edge_cases():
     assert c("Northern America, LATAM, Europe, APAC", remote_flag=True, restrictions=["Northern America", "LATAM", "Europe", "APAC"]).open_to_india
     assert geo.description_restricts("This role is US-only. You must be authorized to work in the United States.")
     assert not geo.description_restricts("We hire globally, including India and the US.")
+
+
+def test_classifier_common_replies():
+    # The standard rejection says "move forward", which is not a yes.
+    no = "Thank you for reaching out. We have decided to move forward with other candidates for this role. We wish you the best in your search."
+    assert classifier.classify({}, "a@b.com", "Re: role", no)["label"] == "negative"
+    assert classifier.classify({}, "a@b.com", "Re: role", "Great, we'd like to move you forward to the next round.")["label"] == "positive"
+    # A question before deciding.
+    q = "Thanks for your email. Before we move ahead, could you share your expected compensation and your earliest joining date?"
+    assert classifier.classify({}, "a@b.com", "Re: role", q)["label"] == "question"
+    # A question about scheduling is still a yes.
+    assert classifier.classify({}, "a@b.com", "Re: role", "Are you free Thursday? Could you share your resume too?")["label"] == "positive"
+    # Out of office with the return date written out.
+    from datetime import date, timedelta
+    back = date.today() + timedelta(days=7)
+    c = classifier.classify({"auto-submitted": "auto-replied"}, "a@b.com", "Automatic reply: Out of office",
+                            f"I am out of the office until {back.strftime('%B')} {back.day}, {back.year} with limited access to email.")
+    assert c["label"] == "out_of_office" and c["return_date"] == back

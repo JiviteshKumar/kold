@@ -272,7 +272,7 @@ function Outreach({ d, onChanged }: { d: Detail; onChanged: () => void }) {
                 <p className="truncate text-sm font-medium">{ct.email}</p>
                 <p className="text-xs text-ink-3">
                   {ct.role === "recruiting" ? "Recruiting inbox" : ct.role === "person" ? "Named person" : ct.role === "user-added" ? "Added by you" : "Company inbox"} ·{" "}
-                  {ct.source_url.startsWith("http") ? <a href={ct.source_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="underline decoration-dotted hover:text-ink">found here</a> : ct.source_url}
+                  {ct.source_url.startsWith("http") ? <a href={ct.source_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="underline decoration-dotted hover:text-ink">found here</a> : ct.mx_ok ? "mail server verified" : "mail server not verified"}
                 </p>
               </div>
               {to === ct.email && <CheckCircle2 size={17} className="text-ice" />}

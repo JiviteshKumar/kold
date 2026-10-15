@@ -39,9 +39,9 @@ def _summary(desc: str) -> str:
     m = ROLE_HEADING.search(desc)
     if m and m.start() < len(desc) - 120:
         desc = desc[m.end():]
-    paras = [p.strip() for p in desc.split("\n") if len(p.strip()) > 40]
+    paras = [p.strip().lstrip("-•*·–▪● ").strip() for p in desc.split("\n") if len(p.strip()) > 40]
     pick = [p for p in paras if not p.lower().startswith(("about ", "who we are", "our mission"))] or paras
-    out = " ".join(pick[:2])
+    out = " ".join(p if p[-1:] in ".!?:;" else p + "." for p in pick[:2])  # bullets have no full stop
     return out[:320] + ("…" if len(out) > 320 else "")
 
 
